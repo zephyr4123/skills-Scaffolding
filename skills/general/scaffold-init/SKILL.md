@@ -25,21 +25,30 @@ description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入
 
 ### 第二阶段：注入本项目
 
-5. **幂等检查**：项目根 CLAUDE.md 若已包含 `.claude/skills-guide.md` 字样，确认符号链接仍有效后告知"已注入过"并停止。
+要注入的文件有两个，处理方式相同（都在仓库根）：
+
+| 仓库文件 | 项目内链接 | 作用 |
+|---|---|---|
+| GUIDE.md | `.claude/skills-guide.md` | 什么场景用哪个 skill |
+| HABITS.md | `.claude/habits.md` | 主人的协作习惯与经验 |
+
+5. **逐文件幂等检查**：对每个文件单独判断——项目根 CLAUDE.md 已包含对应 import 行的跳过，缺的补上（老项目可能只注入过 GUIDE，重跑时只补 HABITS，不重复添加已有的）。
 6. **建符号链接**：
    ```bash
    mkdir -p .claude
-   ln -sfn <GUIDE.md 的绝对路径> .claude/skills-guide.md
+   ln -sfn <仓库>/GUIDE.md .claude/skills-guide.md
+   ln -sfn <仓库>/HABITS.md .claude/habits.md
    ```
-7. **注入 import**：项目根没有 CLAUDE.md 就创建，有就在末尾追加（原有内容一字不动）：
+7. **注入 import**：项目根没有 CLAUDE.md 就创建；`## Skill 脚手架` 小节已存在就只在该小节里补缺的行，否则在文件末尾追加整节（原有内容一字不动）：
 
    ```markdown
 
    ## Skill 脚手架
    @.claude/skills-guide.md
+   @.claude/habits.md
    ```
 
-8. **git 卫生**：若项目用 git，把 `.claude/skills-guide.md` 加进 .gitignore（符号链接是本机绝对路径，不该进版本库；CLAUDE.md 里的 import 行可以提交，别的机器上链接缺失时会被静默跳过，无副作用）。
+8. **git 卫生**：若项目用 git，把 `.claude/skills-guide.md` 和 `.claude/habits.md` 加进 .gitignore（符号链接是本机绝对路径，不该进版本库；CLAUDE.md 里的 import 行可以提交，别的机器上链接缺失时会被静默跳过，无副作用）。
 9. **收尾**：告知注入完成，新会话自动生效；以后仓库里更新 GUIDE.md，所有已注入项目自动跟进。
 
 ## 红线
