@@ -26,7 +26,7 @@
 ### 通用
 
 - **要求完整输出、禁止省略占位**：`full-output-enforcement`
-- **开发流程纪律**（superpowers 插件）：动手前 `brainstorming`，多步任务 `writing-plans`，遇 bug `systematic-debugging`，新功能 `test-driven-development`，宣称完成前 `verification-before-completion`
+- **开发流程纪律**（superpowers 插件：`brainstorming`、`writing-plans`、`systematic-debugging` 等）：**仅在用户点名要求时使用，绝不自主加载**——它很重、时间-收益杠杆低，日常用轻量 skill 小步快跑 + workflow 对抗性审查替代
 
 ## 原则
 

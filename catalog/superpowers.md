@@ -4,6 +4,7 @@
 - **安装**：`/plugin install superpowers@claude-plugins-official`（官方市场默认可用）
 - **本机版本**：6.1.0（持续自动更新）
 - **一句话**：面向 Claude Code 的软件工程流程纪律插件，覆盖需求脑暴、计划编写与执行、TDD、系统化调试、代码评审、并行子代理、worktree 隔离与完工验证。
+- **使用建议**：很重，慎用——除非点名要求，日常以"轻量 skill 小步快跑 + workflow 对抗性审查"替代（见 scaffold/HABITS.md），插件保留安装即可。
 
 ## Skill 清单
 
