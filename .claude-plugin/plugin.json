@@ -1,0 +1,34 @@
+{
+  "name": "zephyr-skills",
+  "description": "个人 Agent Skill 脚手架：21 个设计/前端/iOS/写作/通用 skill + 场景路由指南与协作习惯的会话自动注入",
+  "version": "1.0.0",
+  "author": {
+    "name": "zephyr4123",
+    "url": "https://github.com/zephyr4123"
+  },
+  "homepage": "https://github.com/zephyr4123/skills-Scaffolding",
+  "license": "MIT",
+  "skills": [
+    "./skills/design/brandkit",
+    "./skills/design/design-taste-frontend",
+    "./skills/design/design-taste-frontend-v1",
+    "./skills/design/emil-design-eng",
+    "./skills/design/frontend-design",
+    "./skills/design/gpt-taste",
+    "./skills/design/high-end-visual-design",
+    "./skills/design/imagegen-frontend-mobile",
+    "./skills/design/imagegen-frontend-web",
+    "./skills/design/impeccable",
+    "./skills/design/industrial-brutalist-ui",
+    "./skills/design/minimalist-ui",
+    "./skills/design/redesign-existing-projects",
+    "./skills/design/review-animations",
+    "./skills/design/stitch-design-taste",
+    "./skills/frontend/design-loop",
+    "./skills/frontend/image-to-code",
+    "./skills/general/full-output-enforcement",
+    "./skills/general/scaffold-init",
+    "./skills/ios/swiftui-design-principles",
+    "./skills/writing/humanizer"
+  ]
+}
