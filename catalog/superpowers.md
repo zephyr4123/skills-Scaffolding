@@ -1,6 +1,6 @@
 # superpowers
 
-- **来源**：Anthropic 官方插件市场 — <https://github.com/anthropics/claude-plugins-official>
+- **来源**：社区作者 Jesse Vincent（obra）出品，经 Anthropic 官方插件市场分发 — <https://github.com/anthropics/claude-plugins-official>（上游 <https://github.com/obra/superpowers>）
 - **安装**：`/plugin install superpowers@claude-plugins-official`（官方市场默认可用）
 - **本机版本**：6.1.0（持续自动更新）
 - **一句话**：面向 Claude Code 的软件工程流程纪律插件，覆盖需求脑暴、计划编写与执行、TDD、系统化调试、代码评审、并行子代理、worktree 隔离与完工验证。

@@ -1,6 +1,6 @@
 # Skill 使用指南（skills-scaffolding 注入）
 
-本项目已装载个人 skill 库（来源：`~/coding/personal/skills-scaffolding`，均已链接进 `~/.claude/skills`）。遇到下列场景时**主动**调用对应 skill，不要等用户点名。
+本项目已装载个人 skill 库，全部链接在 `~/.claude/skills`。遇到下列场景时**主动**调用对应 skill，不要等用户点名。（需要定位 skill 库仓库时：本项目 `.claude/skills-guide.md` 符号链接的目标就是仓库根下的 GUIDE.md，`readlink` 反查即得仓库根。）
 
 ## 场景路由
 
@@ -31,5 +31,5 @@
 ## 原则
 
 - 设计类任务：选 `impeccable` 或 `design-taste-frontend` 之一作主导，风格类 skill 做叠加约束，不要同时开多个主导
-- 插件类 skill（swiftui-pro、ios-swift-skills、superpowers）依赖插件已安装；缺了就按 `~/coding/personal/skills-scaffolding/install.manifest` 提示安装
-- 完整清单与每个 skill 的详情：`~/coding/personal/skills-scaffolding/README.md`
+- 插件类 skill（swiftui-pro、ios-swift-skills、superpowers）依赖插件已安装；缺了就按仓库根的 `install.manifest` 安装（或跑仓库的 `scripts/install.sh`）
+- 完整清单与每个 skill 的详情：仓库根的 `README.md`

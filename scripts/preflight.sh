@@ -34,7 +34,7 @@ while read -r _ url name; do
   if [ -e "$TARGET/$name" ]; then
     gok=$((gok+1))
   else
-    echo "  [缺] $name（来源 $url）"
+    echo "  [缺] ${name}（来源 ${url}）"
     MISSING=1
   fi
 done < <(grep -E '^clone[[:space:]]' "$MANIFEST" 2>/dev/null || true)
