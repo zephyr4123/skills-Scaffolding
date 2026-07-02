@@ -5,10 +5,11 @@
 ## 仓库结构
 
 ```
-skills/      收编的完整副本（散装、没有版本管理的 skill 的正式的家），按领域分组
-catalog/     第三方插件档案（本体由插件市场管理，这里只记来源、装法、用途）
-templates/   新写 skill 的起步模板
-scripts/     install.sh：把 skills/ 里的 skill 链接回 ~/.claude/skills
+skills/           收编的完整副本（散装、没有版本管理的 skill 的正式的家），按领域分组
+catalog/          第三方插件档案（本体由插件市场管理，这里只记来源、装法、用途）
+templates/        新写 skill 的起步模板
+install.manifest  一键安装清单：声明要装的插件和 git 来源 skill
+scripts/          install.sh：一条命令恢复全部（链接收编 skill + 装插件 + 克隆 git skill）
 ```
 
 收录规则：自己写的、散装下载的 → 存完整副本进 `skills/`；插件市场管理的 → 只在 `catalog/` 建档。
@@ -73,7 +74,8 @@ scripts/     install.sh：把 skills/ 里的 skill 链接回 ~/.claude/skills
 ## 日常用法
 
 - **忘了某个 skill 是干啥的** → 看上面的表
-- **换新机器 / 重装** → `bash scripts/install.sh` 把 `skills/` 全部链接回 `~/.claude/skills`；catalog 里的插件按各自档案里的安装命令重装
+- **换新机器 / 重装** → clone 本仓库后跑 `bash scripts/install.sh`，一条命令全部就位：收编 skill 链接进 `~/.claude/skills`、插件自动 `marketplace add` + `install`、git 来源 skill 自动 clone（重复执行安全，已就位的自动跳过）
 - **新收一个散装 skill** → 复制进 `skills/<领域>/`，README 表里加一行
-- **新装一个插件** → `catalog/` 建一个档案，README 表里加一行
+- **新装一个插件** → `catalog/` 建一个档案，README 表里加一行，`install.manifest` 加一行 `plugin`
+- **想跟踪上游更新的 git skill** → 不收编，`install.manifest` 加一行 `clone`，install.sh 会负责 clone 和后续 pull
 - **自己写新 skill** → 从 `templates/skill-template/` 复制起步

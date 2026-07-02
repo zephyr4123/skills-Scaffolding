@@ -1,0 +1,14 @@
+# skills-scaffolding 安装清单 —— scripts/install.sh 会读取本文件
+#
+# 行格式（空格分隔）：
+#   plugin <marketplace 来源：github repo 或 URL；官方市场填 -> <插件@市场>
+#   clone  <git 仓库地址> <装进 ~/.claude/skills 的目录名>
+#
+# skills/ 目录下收编的副本不需要写在这里，install.sh 会自动全部链接。
+
+plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills
+plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill
+plugin - superpowers@claude-plugins-official
+
+# 示例：以 git clone 方式跟踪上游、不收编进本仓库的 skill
+# clone https://github.com/blader/humanizer humanizer
