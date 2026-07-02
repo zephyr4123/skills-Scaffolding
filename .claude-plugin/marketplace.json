@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "个人 Agent Skill 脚手架：设计 / 前端 / iOS / 写作 skill 全家桶 + 协作习惯自动注入",
-    "version": "1.0.0"
+    "version": "1.0.1"
   },
   "plugins": [
     {
       "name": "zephyr-skills",
       "source": "./",
-      "description": "全部收编 skill（design / frontend / ios / writing / general 共 21 个）+ GUIDE/HABITS 会话自动注入（SessionStart hook，可按项目禁用）",
-      "version": "1.0.0",
+      "description": "全部收编 skill（design / frontend / ios / writing / general 全域）+ GUIDE/HABITS 会话自动注入（SessionStart hook，可按项目禁用）",
+      "version": "1.0.1",
       "author": {
         "name": "zephyr4123"
       }

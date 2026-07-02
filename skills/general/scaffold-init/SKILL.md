@@ -13,6 +13,7 @@ description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入
 
 ### 第一阶段：环境预检查与按需补齐
 
+0. **插件模式护栏**：先跑 `claude plugin list`——若本机已装 `zephyr-skills` 插件，说明走的是插件市场模式：GUIDE/HABITS 已由插件 hook 每次会话自动注入，skill 也已随插件注册。告知用户"本机是插件模式，无需 scaffold-init"，**立即停止**（继续做会造成双模式共存、双重注入）。
 1. **定位仓库**，按顺序尝试：
    - 默认路径 `~/coding/personal/skills-scaffolding`
    - `readlink ~/.claude/skills/scaffold-init` 反查仓库根（skill 被链接过就能查到）
@@ -55,6 +56,7 @@ description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入
 
 ## 红线
 
+- 检测到 `zephyr-skills` 插件已安装时绝不继续注入（那是插件模式的地盘）
 - 预检查通过就绝不跑安装——避免重复下载和无谓折腾；预检查不通过也只跑一次 install.sh，靠其幂等性补缺
 - 绝不把 GUIDE.md 的内容复制进项目——必须走符号链接 + 相对 import，保持单一来源
 - 绝不修改或删除项目 CLAUDE.md 里已有的任何内容，只追加
