@@ -17,6 +17,8 @@ description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入
    - 默认路径 `~/coding/personal/skills-scaffolding`
    - `readlink ~/.claude/skills/scaffold-init` 反查仓库根（skill 被链接过就能查到）
    - 都没有（全新机器）→ `git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding`
+
+   注入文件在仓库的 `scaffold/` 目录下：`scaffold/GUIDE.md` 与 `scaffold/HABITS.md`。
 2. **只读预检查**：`bash <仓库>/scripts/preflight.sh`，它会报告收编 skill、git 来源 skill、插件三类的就位情况，不做任何改动。
 3. **按需补齐**：
    - 预检查退出码 0（环境完整）→ 什么都不装，直接进第二阶段
@@ -29,15 +31,15 @@ description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入
 
 | 仓库文件 | 项目内链接 | 作用 |
 |---|---|---|
-| GUIDE.md | `.claude/skills-guide.md` | 什么场景用哪个 skill |
-| HABITS.md | `.claude/habits.md` | 主人的协作习惯与经验 |
+| scaffold/GUIDE.md | `.claude/skills-guide.md` | 什么场景用哪个 skill |
+| scaffold/HABITS.md | `.claude/habits.md` | 主人的协作习惯与经验 |
 
-5. **逐文件幂等检查**：对每个文件单独判断——项目根 CLAUDE.md 已包含对应 import 行的跳过，缺的补上（老项目可能只注入过 GUIDE，重跑时只补 HABITS，不重复添加已有的）。
+5. **逐文件幂等检查**：对每个文件单独判断——项目根 CLAUDE.md 已包含对应 import 行且符号链接目标有效的跳过；缺 import 行的补行；import 行在但链接失效（目标不存在，比如仓库文件挪过位置）的重建链接（老项目可能只注入过 GUIDE，重跑时只补 HABITS，不重复添加已有的）。
 6. **建符号链接**：
    ```bash
    mkdir -p .claude
-   ln -sfn <仓库>/GUIDE.md .claude/skills-guide.md
-   ln -sfn <仓库>/HABITS.md .claude/habits.md
+   ln -sfn <仓库>/scaffold/GUIDE.md .claude/skills-guide.md
+   ln -sfn <仓库>/scaffold/HABITS.md .claude/habits.md
    ```
 7. **注入 import**：项目根没有 CLAUDE.md 就创建；`## Skill 脚手架` 小节已存在就只在该小节里补缺的行，否则在文件末尾追加整节（原有内容一字不动）：
 

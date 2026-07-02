@@ -1,6 +1,6 @@
 # Skill 使用指南（skills-scaffolding 注入）
 
-本项目已装载个人 skill 库，全部链接在 `~/.claude/skills`。遇到下列场景时**主动**调用对应 skill，不要等用户点名。（需要定位 skill 库仓库时：本项目 `.claude/skills-guide.md` 符号链接的目标就是仓库根下的 GUIDE.md，`readlink` 反查即得仓库根。）
+本项目已装载个人 skill 库，全部链接在 `~/.claude/skills`。遇到下列场景时**主动**调用对应 skill，不要等用户点名。（需要定位 skill 库仓库时：本项目 `.claude/skills-guide.md` 符号链接的目标是仓库 `scaffold/` 目录下的 GUIDE.md，`readlink` 反查后上溯一级即仓库根。）
 
 ## 场景路由
 
