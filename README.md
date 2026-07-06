@@ -210,6 +210,7 @@ skills/           收编的 skill 完整副本，按领域分组（design/fronte
 catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与经验，活文档）
 .claude-plugin/   marketplace.json + plugin.json：本仓库同时是一个可订阅的插件市场
+.github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
 install.manifest  声明式清单：要装哪些插件、克隆哪些 git 来源 skill
 scripts/
@@ -302,7 +303,7 @@ plugin - superpowers@claude-plugins-official
 | 跟踪上游的 git skill | `install.manifest` 加 `clone` 行（install.sh 负责 clone 和后续 pull） |
 | 悟出新的经验习惯 | HABITS.md 加一行并按下行发版（git 侧即刻生效，插件订阅者更新后生效） |
 | 自己写新 skill | 从 `templates/skill-template/` 复制起步，写完按"收散装 skill"流程走 |
-| 改了 GUIDE/HABITS/skill 正文（发版） | bump `.claude-plugin/` 两个 json 里的 version → commit + push。git 用户 pull 即生效（符号链接）；插件订阅者 `claude plugin update` 后生效 |
+| 改了 GUIDE/HABITS/skill 正文（发版） | bump `.claude-plugin/` 两个 json 里的 version → commit + push，**其余全自动**：GitHub Actions 会校验清单一致性，并对新版本自动打 `v<版本>` 与 `zephyr-skills--v<版本>` 双 tag、生成 Release。git 用户 pull 即生效；插件订阅者 `claude plugin update` 后生效 |
 
 > 嫌手动登记麻烦？把这些动作丢给项目里的 Claude 做——它会按[操作手册](#给-claude-code-的操作手册)执行。
 
