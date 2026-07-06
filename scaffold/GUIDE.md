@@ -26,6 +26,7 @@
 ### 通用
 
 - **要求完整输出、禁止省略占位**：`full-output-enforcement`
+- **Multica 工作区操作**（派 issue 给 agent、看板/轨迹/汇报、onboarding、贴 multica.ai URL）：`multica-collab`
 - **开发流程纪律**（superpowers 插件：`brainstorming`、`writing-plans`、`systematic-debugging` 等）：**仅在用户点名要求时使用，绝不自主加载**——它很重、时间-收益杠杆低，日常用轻量 skill 小步快跑 + workflow 对抗性审查替代
 
 ## 原则
