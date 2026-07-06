@@ -1,0 +1,76 @@
+# 发版流水线：每次 push 到 main 先做清单校验（CI），
+# 版本号（.claude-plugin/plugin.json 的 version）出现新值时自动打 tag + 发 GitHub Release（CD）。
+# 发版动作 = 本地改版本号 + push，其余全自动；重复 push 同版本会安全跳过（幂等）。
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    name: 校验插件清单
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: plugin.json / marketplace.json / skills 一致性校验
+        run: |
+          python3 - <<'EOF'
+          import glob, json, os, sys
+
+          plugin = json.load(open('.claude-plugin/plugin.json'))
+          market = json.load(open('.claude-plugin/marketplace.json'))
+          errs = []
+
+          entry = market['plugins'][0]
+          if plugin['version'] != entry['version']:
+              errs.append(f"版本不一致: plugin.json={plugin['version']} marketplace.json plugins[0]={entry['version']}")
+          if plugin['version'] != market['metadata']['version']:
+              errs.append(f"版本不一致: plugin.json={plugin['version']} marketplace.json metadata={market['metadata']['version']}")
+          if plugin['name'] != entry['name']:
+              errs.append(f"插件名不一致: {plugin['name']} vs {entry['name']}")
+
+          declared = {os.path.normpath(s) for s in plugin.get('skills', [])}
+          for s in sorted(declared):
+              if not os.path.isfile(os.path.join(s, 'SKILL.md')):
+                  errs.append(f"plugin.json 登记的路径缺 SKILL.md: {s}")
+          for d in glob.glob('skills/*/*/'):
+              nd = os.path.normpath(d)
+              if os.path.isfile(os.path.join(nd, 'SKILL.md')) and nd not in declared:
+                  errs.append(f"skill 目录存在但未登记进 plugin.json: {nd}")
+
+          if errs:
+              print("\n".join("✗ " + e for e in errs))
+              sys.exit(1)
+          print(f"✓ 校验通过: version={plugin['version']}, skills={len(declared)}")
+          EOF
+
+  release:
+    name: 版本变更则打 tag 发 release
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 打 tag 并创建 Release（已存在则跳过）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          TAG="v${VERSION}"
+          PLUGIN_TAG="zephyr-skills--v${VERSION}"   # Claude Code 插件依赖解析用的 tag 格式
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "tag ${TAG} 已存在，本次 push 未变更版本，跳过发版"
+            exit 0
+          fi
+          git tag "${TAG}"
+          git tag "${PLUGIN_TAG}"
+          git push origin "${TAG}" "${PLUGIN_TAG}"
+          gh release create "${TAG}" --title "${TAG}" --generate-notes
+          echo "已发版 ${TAG}（含 ${PLUGIN_TAG}）"
