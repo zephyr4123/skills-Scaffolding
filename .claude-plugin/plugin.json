@@ -1,7 +1,7 @@
 {
   "name": "zephyr-skills",
   "description": "个人 Agent Skill 脚手架：设计/前端/iOS/写作/通用全域 skill + 场景路由指南与协作习惯的会话自动注入",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": {
     "name": "zephyr4123",
     "url": "https://github.com/zephyr4123"
@@ -29,6 +29,7 @@
     "./skills/general/full-output-enforcement",
     "./skills/general/multica-collab",
     "./skills/general/multica-read",
+    "./skills/general/workflow-orchestration",
     "./skills/general/scaffold-init",
     "./skills/ios/swiftui-design-principles",
     "./skills/writing/humanizer"
