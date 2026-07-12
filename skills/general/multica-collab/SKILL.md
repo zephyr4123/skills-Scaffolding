@@ -27,6 +27,7 @@ Multica（开源：<https://github.com/multica-ai/multica>，官方云：<https:
 5. **破坏性操作先确认**：删除 issue/agent、修改他人负责的条目、批量改状态，先向用户复述再执行。
 6. 结构化数据一律 `--output json`，给用户看时翻译成人话。
 7. **issue 合法状态**（以 `multica issue status --help` 为准）：`backlog / todo / in_progress / in_review / done / blocked / cancelled`。别发明状态名。
+8. **全景记忆读取移交 `multica-read`**：单条任务的实时观测（runs/run-messages/comment list）归本 skill；要把 workspace 沉淀的记忆**批量读全**（冷启动 onboarding、取证溯源、按标签/时间/全文检索、成本分析），移交 `multica-read` skill——它有只读白名单网关和 token 纪律，别用裸 CLI 硬读。
 
 ## Phase 0：从零上车（用户什么都没有时）
 
