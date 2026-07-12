@@ -1,6 +1,6 @@
 ---
 name: scaffold-init
-description: Use when 用户想给当前项目"装上 skill 脚手架"、"注入 skill 使用指南"、"scaffold init"，或在新项目里希望 Claude 知道整套个人 skill 该怎么用时 —— 先预检查环境按需补装，再把 skills-scaffolding 仓库的 GUIDE.md 与 HABITS.md 通过项目内符号链接 + @import 挂进项目 CLAUDE.md。
+description: Use when 用户说"安装 scaffold-init 脚手架"、"装上 skill 脚手架"、"注入 skill 使用指南"、"scaffold init"，或在新项目里希望 Claude 知道整套个人 skill 该怎么用时 —— 先预检查环境按需补装，再把 skills-scaffolding 仓库的 GUIDE.md 与 HABITS.md 通过项目内符号链接 + @import 挂进项目 CLAUDE.md。
 ---
 
 # Scaffold Init：给项目注入 skill 使用指南
