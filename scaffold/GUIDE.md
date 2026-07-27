@@ -31,6 +31,8 @@
 
 ### 通用
 
+- **写码 / 架构 / 选库 / 配环境 / 交付**：`coding-standards`（结构三清晰、实现纪律、选型四看、交付自检）
+- **写测试 / 做审查 / 验产出 / 排查问题**：`quality-discipline`（测试驱动、CI 门禁、对抗审查、排查三纪律与证据规格）
 - **要求完整输出、禁止省略占位**：`full-output-enforcement`
 - **Multica 工作区操作**（派 issue 给 agent、看板/轨迹/汇报、onboarding、贴 multica.ai URL）：`multica-collab`
 - **Multica 记忆读取**（把 workspace 的 issue 网络/结论/轨迹/成本读全读透、只读不写、token 高效）：`multica-read`

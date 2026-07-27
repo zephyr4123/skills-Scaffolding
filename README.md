@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-26-blue)
+![Skills](https://img.shields.io/badge/skills-28-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
@@ -68,7 +68,7 @@ codex plugin add zephyr-skills@skills-scaffolding
 
 **装完你得到什么：**
 
-- Claude Code 上全部 **26** 个 skill、Codex 上 **21** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- Claude Code 上全部 **28** 个 skill、Codex 上 **23** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
@@ -101,8 +101,8 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 | 探测到 | 做什么 |
 |---|---|
-| Claude Code | 26 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 21 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件，生成 `scaffold/AGENTS.md` |
+| Claude Code | 28 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 23 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件，生成 `scaffold/AGENTS.md` |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
 脚本幂等——已就位的跳过、已装的跳过、已克隆的 `git pull`，只补缺的。
@@ -166,7 +166,7 @@ Codex 上换成 `codex plugin marketplace add <仓库 URL>` + `codex plugin add 
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 26 个 | ✅ 21 个（5 个标 ⚙️CC 的跑不了，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 28 个 | ✅ 23 个（5 个标 ⚙️CC 的跑不了，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.md` + `@import` 符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.md`**，不会重复注入 |
@@ -187,7 +187,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 - **skill 格式**：两边都是 `SKILL.md` + YAML frontmatter，`name` / `description` 同义
 - **环境变量**：Codex 执行 hook 时会**主动注入** `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA` 做兼容
 
-所以本仓 26 个 skill 的正文**一个字都没为 Codex 改过**，两边共用。
+所以本仓这些 skill 的正文**一个字都没为 Codex 改过**，两边共用。
 
 ### 哪 5 个在 Codex 上跑不了，为什么
 
@@ -214,7 +214,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 26 ──────▶ 注册进 Claude Code（Codex 21 个）│
+│        ├── skills/ × 28 ──────▶ 注册进 Claude Code（Codex 23 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -343,11 +343,13 @@ templates/        新写 skill 的起步模板
 |---|---|---|
 | [humanizer](skills/writing/humanizer/) | ⚙️CC 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
-### general — 通用（6 个）
+### general — 通用（8 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
 | [background-watch](skills/general/background-watch/) | ⚙️CC 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
+| [coding-standards](skills/general/coding-standards/) | 编码与工程标准：不为写而写 / 融入现有代码、结构三清晰（目录/结构/模块）、设计与实现纪律（可读性、错误处理、日志、性能）、留痕文档、依赖选型四看、环境隔离与可回滚，含交付前自检清单（自写） | 写代码、改代码、做架构设计、选第三方库、配环境或准备交付时 |
+| [quality-discipline](skills/general/quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
 | [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
 | [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
