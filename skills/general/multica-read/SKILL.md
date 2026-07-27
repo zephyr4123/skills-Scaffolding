@@ -1,6 +1,7 @@
 ---
 name: multica-read
 description: Use when agent 需要把某个 Multica workspace 的持久化记忆(issue 网络 + 评论结论/⚠️更正 + agent 轨迹 + 元数据 + 代码关联 + 成本)读全、读透、且 token 高效时 —— 尤其冷启动 onboarding、取证溯源、按标签/时间/全文检索、跨会话增量。严格只读,绝不改动 Multica 任何数据。配套 scripts/mc_read.py 提供 14 个只读子命令(bootstrap/map/sweep/list/tree/stats/get/distill/timeline/runs/search/cost/delta/digest)。
+engines: [claude-code, codex]
 ---
 
 # multica-read：让 agent 读全 Multica 的持久化记忆

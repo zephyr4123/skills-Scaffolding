@@ -1,6 +1,7 @@
 ---
 name: ios-verify-loop
 description: Use when 在 iOS 项目里改完代码要**自己拿到证据**再交付时——教一套开发-验证闭环:先查工具链(反"我本地验不了")→ 按层取证(编译 / 本地同镜像服务 / 模拟器点击驱动 AXe / 手势探针 / 接口正负边界样本 / 只读 SQL 对账)→ 用双轨审查兜住自验漏网 → 按规格报证据。含 20+ 条实测踩坑(截图反推坐标点不中、simctl defaults 读错域、首启弹窗覆盖装清不掉…)。不适用于非 iOS 项目、或纯文档改动。
+engines: [claude-code, codex]
 ---
 
 # ios-verify-loop:iOS 开发-验证闭环(自己取证,别把验证甩给人)

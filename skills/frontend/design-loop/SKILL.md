@@ -9,6 +9,7 @@ allowed-tools:
   - Grep
   - Bash
 compatibility: claude-code-only
+engines: [claude-code]
 ---
 
 # Design Loop — Autonomous Site Builder

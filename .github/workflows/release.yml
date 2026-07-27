@@ -49,6 +49,47 @@ jobs:
           print(f"✓ 校验通过: version={plugin['version']}, skills={len(declared)}")
           EOF
 
+      - name: 每个 skill 的 engines 字段合法
+        run: |
+          python3 - <<'EOF'
+          import glob, os, re, sys
+
+          VALID = {"claude-code", "codex"}
+          errs = []
+          counts = {"claude-code": 0, "codex": 0}
+          for f in sorted(glob.glob('skills/*/*/SKILL.md')):
+              txt = open(f, encoding='utf-8').read()
+              m = re.match(r'^---\r?\n(.*?)\r?\n---', txt, re.S)
+              if not m:
+                  errs.append(f"{f}: 没有 frontmatter"); continue
+              fm = m.group(1)
+              em = re.search(r'^engines:\s*\[(.*?)\]\s*$', fm, re.M)
+              if not em:
+                  errs.append(f"{f}: 缺 engines 字段（形如 engines: [claude-code, codex]）"); continue
+              vals = [v.strip() for v in em.group(1).split(',') if v.strip()]
+              if not vals:
+                  errs.append(f"{f}: engines 为空")
+              for v in vals:
+                  if v not in VALID:
+                      errs.append(f"{f}: engines 含未知取值 {v!r}（只允许 {sorted(VALID)}）")
+                  else:
+                      counts[v] += 1
+
+          if errs:
+              print("\n".join("✗ " + e for e in errs)); sys.exit(1)
+          total = len(glob.glob('skills/*/*/SKILL.md'))
+          print(f"✓ engines 字段校验通过：共 {total} 个 skill，"
+                f"Claude Code 适用 {counts['claude-code']}，Codex 适用 {counts['codex']}")
+          EOF
+
+      - name: scaffold/AGENTS.md 与 GUIDE+HABITS 同步
+        run: bash scripts/build-agents-md.sh --check
+
+      - name: 脚本语法闸
+        run: |
+          for f in scripts/*.sh; do bash -n "$f" || exit 1; done
+          echo "✓ scripts/*.sh 语法通过"
+
   release:
     name: 版本变更则打 tag 发 release
     needs: validate

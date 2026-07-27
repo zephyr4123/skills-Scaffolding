@@ -1,6 +1,9 @@
 ---
 name: skill-name
 description: Use when <触发场景> - <这个 skill 让模型做什么、达到什么效果>
+# 适用引擎（必填，CI 会校验）。两个都能跑就都写；
+# 内容依赖某引擎专有能力、或硬编码了 .claude/ 之类路径的，只写那一个 —— 诚实收窄优于假装通用。
+engines: [claude-code, codex]
 ---
 
 # Skill 标题

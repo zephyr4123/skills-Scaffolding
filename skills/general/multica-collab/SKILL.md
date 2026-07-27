@@ -1,6 +1,7 @@
 ---
 name: multica-collab
 description: Use when 用户提到 multica——想把任务派给 multica agent、看任务/看板/运行轨迹、做 onboarding 接入、出工作汇报，或贴出 multica 实例的 issue/run URL 时。让任意 coding agent（Claude Code / Codex / 任何带 CLI 的引擎）成为用户与 Multica 之间的操作界面：发 issue、观测 run、验收产物、救活死锁，全程 CLI，用户零点击。含把 issue 建成**带全属性的工作管理对象**（project / 优先级 / 排期 / 正交标签 / 父子与 stage / PR 自动关联），以及建专职 agent 的配置边界。
+engines: [claude-code, codex]
 ---
 
 # Multica Collab：用对话驾驭 AI 原生工作区

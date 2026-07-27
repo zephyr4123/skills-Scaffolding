@@ -5,6 +5,7 @@ license: MIT
 metadata:
   author: arjitj2
   version: "1.1.1"
+engines: [claude-code, codex]
 ---
 
 This skill encodes design principles derived from comparing polished, production-quality SwiftUI apps against poorly-built ones. The patterns here represent what separates an app that feels "right" from one where the margins, spacing, and text sizes just look "off."

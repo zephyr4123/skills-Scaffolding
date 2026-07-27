@@ -17,6 +17,7 @@ allowed-tools:
   - Grep
   - Glob
   - AskUserQuestion
+engines: [claude-code]
 ---
 
 # Humanizer: Remove AI Writing Patterns

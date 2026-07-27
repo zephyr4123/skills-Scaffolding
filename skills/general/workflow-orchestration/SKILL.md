@@ -1,6 +1,7 @@
 ---
 name: workflow-orchestration
 description: Use when 面对一件有份量的多步工程活(设计一个功能/大改动/大规模调研/代码审查/迁移/排障)、要决定"怎么用多 agent Workflow 编排"时,或**长跑 workflow 卡住/大批失败/要放量前评估**时——教一套以 Workflow 为核心锚点的编排打法:何时该上(杠杆闸)、选什么形状(barrier / pipeline / offload)、哪五种范式(大规模调研+交叉验证 / 判官团发散 / 对抗审查收敛 / 并行+上下文卸载 / 大切片流水线)、承重纪律(agents propose orchestrator disposes、结构化产出契约、收敛判据、独立性校验),以及**长跑可靠性工程**(输出爆量=头号杀手、文件落盘量产架构、null 兜底、指标由代码算、诊断"卡住"三义、缓存续跑、放量前资源三件套 gate)。配合锚:Playwright / run-app 闭环校验。不适用于纯对话或琐碎机械改动。
+engines: [claude-code]
 ---
 
 # workflow-orchestration:以 Workflow 为核心锚点的工程编排

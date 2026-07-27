@@ -8,6 +8,7 @@ license: Apache 2.0
 allowed-tools:
   - Bash(npx impeccable *)
   - Bash(node .claude/skills/impeccable/scripts/*)
+engines: [claude-code]
 ---
 
 Designs and iterates production-grade frontend interfaces. Real working code, committed design choices, exceptional craft.

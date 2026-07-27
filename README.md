@@ -7,8 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 ![Skills](https://img.shields.io/badge/skills-26-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
+![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
-*两条命令订阅全套 skill 与协作习惯 —— 或 git clone 完全掌控*
+*两条命令订阅全套 skill 与协作习惯 —— Claude Code 与 Codex 通用，或 git clone 完全掌控*
 
 </div>
 
@@ -16,19 +17,20 @@
 
 一套可复制的个人 Agent Skill 脚手架。它做四件事：
 
-1. **收编**：把散落各处的 Claude Code skill 收进一个有版本管理的仓库，配上"每个是干啥的"总索引
-2. **市场分发**：本仓库自身就是一个 Claude Code 插件市场，`/plugin` 两条命令即可订阅全套（含自动更新）
+1. **收编**：把散落各处的 Agent Skill 收进一个有版本管理的仓库，配上"每个是干啥的"总索引
+2. **市场分发**：本仓库自身就是一个插件市场，**Claude Code 与 Codex 都能订阅**，各两条命令拿到全套
 3. **一键恢复**：git 模式下任何机器一条命令装齐全部 skill 和插件，幂等、只补缺、不重复下载
-4. **会话注入**：让每次会话自动知道**什么场景用哪个 skill**（GUIDE.md）和**主人喜欢怎么干活**（HABITS.md）——插件模式由 hook 全自动完成，git 模式对 Claude 说一句"安装 scaffold-init 脚手架"
+4. **会话注入**：让每次会话自动知道**什么场景用哪个 skill**（GUIDE.md）和**主人喜欢怎么干活**（HABITS.md）——插件模式由 hook 完成，git 模式说一句"安装 scaffold-init 脚手架"
 
-> 这份 README 同时写给两类读者：**人类**（往下看快速开始）和 **Claude Code**（见[给 Claude Code 的操作手册](#给-claude-code-的操作手册)——如果你是一个正在读这份文档的模型，那一节就是为你写的）。
+> 这份 README 同时写给两类读者：**人类**（往下看快速开始）和 **AI 助手**（见[给 AI 助手的操作手册](#给-ai-助手的操作手册)——如果你是一个正在读这份文档的模型，无论跑在 Claude Code 还是 Codex 上，那一节都是为你写的）。
 
 ## 目录
 
 - [快速开始](#快速开始)
 - [精选第三方插件](#精选第三方插件catalog)
+- [引擎适配](#引擎适配)
 - [端到端原理](#端到端原理)
-- [给 Claude Code 的操作手册](#给-claude-code-的操作手册)
+- [给 AI 助手的操作手册](#给-ai-助手的操作手册)
 - [仓库结构](#仓库结构)
 - [Skill 总索引](#收编的-skillskills)
 - [install.manifest 格式](#installmanifest-格式)
@@ -48,18 +50,29 @@
 
 ### 模式一：插件市场（推荐给使用者）
 
-在 Claude Code 里执行两条命令：
+**Claude Code**——在会话里执行两条命令：
 
 ```
 /plugin marketplace add zephyr4123/skills-Scaffolding
 /plugin install zephyr-skills@skills-scaffolding
 ```
 
+**Codex**——终端里执行两条命令：
+
+```bash
+codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
+codex plugin add zephyr-skills@skills-scaffolding
+```
+
+> Codex 原生读 `.claude-plugin/` 格式的市场与插件清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径，`plugin.json` 的回落在其开源实现的 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 常量里）。**同一个仓库、同一份清单，两个引擎都吃。**
+
 **装完你得到什么：**
 
-- 全部 26 个 skill 立即可用（以 `zephyr-skills:xxx` 命名空间注册，Claude 自动按场景调用）
-- **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置，连"安装 scaffold-init 脚手架"都不用说
-- **更新省心**：仓库发新版后 `claude plugin update zephyr-skills` 一条命令拿到最新（市场清单也会定期自动刷新）
+- Claude Code 上全部 **26** 个 skill、Codex 上 **21** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
+- **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
+
+> ⚠️ **Codex 用户注意**：插件自带的 hook **默认不被信任**，仅安装插件**不足以**拿到 GUIDE/HABITS 注入。首次启动 Codex 时会自动弹信任确认屏，选 `Trust all and continue` 之后 hook 才会执行（全新环境会多一个项目信任屏，合计两下）。这是 Codex 的安全设计，不是装坏了。
 
 **日常管理：**
 
@@ -77,28 +90,43 @@ claude plugin uninstall zephyr-skills                 # 整体卸载
 
 ### 模式二：git 仓库（推荐给维护者 / 想改 skill 的人）
 
-前提：机器上已装 git 和 [Claude Code](https://claude.com/claude-code)（`claude` 命令可用）。
+前提：机器上已装 git，以及 [Claude Code](https://claude.com/claude-code) 与 Codex **至少一个**（`install.sh` 会自动探测装了哪些，只处理存在的）。
 
 ```bash
 git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding
 bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 ```
 
-装完即拥有全套：收编 skill 链接进 `~/.claude/skills`，三方插件自动安装。机器上已有部分 skill 也没关系——脚本幂等，已就位的跳过，只补缺的。若暂时没装 Claude Code，skill 链接部分照常完成，插件部分会提示失败，装好后重跑同一命令即可补齐。
+`install.sh` **自己探测这台机器上有哪些引擎**，只装存在的那些：
+
+| 探测到 | 做什么 |
+|---|---|
+| Claude Code | 26 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 21 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件，生成 `scaffold/AGENTS.md` |
+| 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
+
+脚本幂等——已就位的跳过、已装的跳过、已克隆的 `git pull`，只补缺的。
 
 > 克隆到别的路径也行，脚本会从自身位置定位仓库；但默认路径能让 scaffold-init 的自动发现更顺畅。
 
 ### 新项目（仅 git 模式；插件模式已由 hook 全自动注入，**不要**再说这句话，会双重注入）
 
-在项目目录里对 Claude Code 说一句：
+在项目目录里对 Claude Code 或 Codex 说一句：
 
 > **安装 scaffold-init 脚手架**
 
-> 请带上 skill 名说全——只说"装脚手架"是个通用词，Claude 可能给你装成别的框架脚手架（真实踩过的坑）。
+> 请带上 skill 名说全——只说"装脚手架"是个通用词，可能给你装成别的框架脚手架（真实踩过的坑）。
 
-Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、全齐就零动作），然后把 GUIDE.md 和 HABITS.md 注入本项目的 CLAUDE.md。从此这个项目的每次会话都自带 skill 路由知识和协作习惯，一次注入永久生效。
+它会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、全齐就零动作），再按引擎注入：
 
-> 前提：这台机器跑过一次上面的安装命令（否则 Claude 还不认识 scaffold-init 这个 skill）。
+| 引擎 | 注入方式 |
+|---|---|
+| Claude Code | 项目内建符号链接 `.claude/skills-guide.md` / `.claude/habits.md`，`CLAUDE.md` 里写相对路径 `@import` |
+| Codex | 项目根的 `AGENTS.md` **本身**做成符号链接，指向 `scaffold/AGENTS.md`（GUIDE+HABITS 的合并产物） |
+
+两种方式都不复制内容——仓库里改一行，所有已注入项目下次会话自动跟进。两个入口可安全并存：**Codex 默认不读 `CLAUDE.md`**，不会重复注入。
+
+> 前提：这台机器跑过一次上面的安装命令（否则模型还不认识 scaffold-init 这个 skill）。
 
 ### 日常
 
@@ -119,6 +147,8 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 /plugin install superpowers@claude-plugins-official
 ```
 
+Codex 上换成 `codex plugin marketplace add <仓库 URL>` + `codex plugin add <插件@市场>`；或者直接跑 `scripts/install.sh`，它按 `install.manifest` 给两个引擎各装一遍。
+
 | 插件 | 为什么值得装 | 档案 |
 |---|---|---|
 | **ios-swift-skills** | iOS 开发一包全覆盖：模拟器运行与调试、xctrace 性能剖析、Swift 6 并发审查、SwiftUI 性能审计、Liquid Glass、App Store 发布与 changelog、GitHub issue 修复流（10 个 skill） | [查看](catalog/ios-swift-skills.md) |
@@ -128,6 +158,50 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 插件本体由各自作者维护更新，本仓库只存档案不存副本——所以它们**不会**随 zephyr-skills 自动安装，要用就敲上面的命令；git 模式则由 install.sh 按 `install.manifest` 自动装齐。
 
 ---
+
+## 引擎适配
+
+这套脚手架同时服务三类用户。**下表每一格都是实测结论**——在真实 Codex（`codex-cli 0.145.0`）的隔离环境里装过、跑过、取过证，不是读文档推出来的。
+
+| | 只用 Claude Code | 只用 Codex | 两个都用 |
+|---|---|---|---|
+| **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
+| **可用 skill** | ✅ 26 个 | ✅ 21 个（5 个标 ⚙️CC 的跑不了，见下） | ✅ 各取所需 |
+| **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
+| **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
+| **项目级注入** | ✅ `CLAUDE.md` + `@import` 符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.md`**，不会重复注入 |
+| **单一来源** | ✅ 仓库改一行，全机器全项目跟进 | ✅ 同左 | ✅ 同左 |
+
+### ⚠️ Codex 的一个必知差异：hook 信任门槛
+
+**仅安装插件不足以拿到 GUIDE/HABITS 注入。** Codex 把插件自带的 hook 视为 non-managed，默认不执行——这是它的安全设计。首次启动会自动弹信任确认屏（不用手动敲 `/hooks`），选 `Trust all and continue` 之后才生效；全新环境会多一个项目信任屏，合计两下。
+
+装完发现没注入，先看是不是卡在这里，别以为坏了。
+
+### 为什么两边都能读同一份清单
+
+Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产物：
+
+- **市场清单**：官方文档把 `$REPO_ROOT/.claude-plugin/marketplace.json` 列为 legacy-compatible 路径
+- **插件清单**：其开源实现里有 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS = [".codex-plugin/plugin.json", ".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"]`，按序回落，带单测
+- **skill 格式**：两边都是 `SKILL.md` + YAML frontmatter，`name` / `description` 同义
+- **环境变量**：Codex 执行 hook 时会**主动注入** `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA` 做兼容
+
+所以本仓 26 个 skill 的正文**一个字都没为 Codex 改过**，两边共用。
+
+### 哪 5 个在 Codex 上跑不了，为什么
+
+每个 skill 的 frontmatter 都有 `engines:` 字段（CI 校验），GUIDE 路由里标 **⚙️CC**：
+
+| Skill | 原因 |
+|---|---|
+| `workflow-orchestration` | 整篇建立在 Claude Code 的 Workflow 工具上（`parallel`/`pipeline`、`effort`、缓存前缀链、journal 字段），换引擎需重写而非改措辞 |
+| `background-watch` | 依赖 `Monitor` 与后台任务两个 harness 能力 |
+| `impeccable` | 正文 37 处硬编码 `node .claude/skills/impeccable/scripts/…`，装到 Codex 的 `.agents/skills` 下第一步就 ENOENT。**上游本体其实支持 Codex**，靠它自己的安装器改写路径，而本仓只收了裸副本——这是打包缺陷不是方法论缺陷 |
+| `design-loop` | 上游作者自己在 frontmatter 声明 `compatibility: claude-code-only`，尊重上游不擅自扩大 |
+| `humanizer` | 上游声明支持 Claude Code 与 OpenCode，未提 Codex，同样不替它扩大 |
+
+判定标准是**「内容在另一个引擎上能不能真正执行」**，不是话题相不相关。拿不准一律判窄——标窄了只少推荐一次，标宽了会让人踩空。
 
 ## 端到端原理
 
@@ -140,7 +214,7 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 26 ──────▶ 直接注册进 Claude Code         │
+│        ├── skills/ × 26 ──────▶ 注册进 Claude Code（Codex 21 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -179,11 +253,11 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 
 ---
 
-## 给 Claude Code 的操作手册
+## 给 AI 助手的操作手册
 
-如果你是一个 Claude Code 会话，用户让你操作这个脚手架，按下表办事。
+如果你是一个 Claude Code 或 Codex 会话，用户让你操作这个脚手架，按下表办事。
 
-**第 0 步，先判定模式**：跑 `claude plugin list`——里面有 `zephyr-skills` 就是**插件模式**，skill 与注入已由插件承载，下表标「仅 git 模式」的行**不要执行**（跑 preflight / install.sh / scaffold-init 会造成双模式共存、双重注入），对应意图直接回答"本机是插件模式，无需此操作"。没有该插件才按 git 模式继续。
+**第 0 步，先判定模式**：跑 `claude plugin list`（Codex 上跑 `codex plugin list`）——里面有 `zephyr-skills` 就是**插件模式**，skill 与注入已由插件承载，下表标「仅 git 模式」的行**不要执行**（跑 preflight / install.sh / scaffold-init 会造成双模式共存、双重注入），对应意图直接回答"本机是插件模式，无需此操作"。没有该插件才按 git 模式继续。
 
 git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试）：① 默认 `~/coding/personal/skills-scaffolding`；② `readlink ~/.claude/skills/scaffold-init` 反查（链接目标的上三级就是仓库根）；③ 都没有则 `git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding`。
 
@@ -191,7 +265,7 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 |---|---|
 | "安装 scaffold-init 脚手架" / "注入 skill 指南"（仅 git 模式） | 调用 `scaffold-init` skill；若本机没有该 skill，先按下一行恢复环境，再执行 `<仓库>/skills/general/scaffold-init/SKILL.md` 里的步骤 |
 | 恢复/检查环境（仅 git 模式） | 先 `bash <仓库>/scripts/preflight.sh`（只读，退出码 0=完整 1=有缺口）；**仅当有缺口时**才 `bash <仓库>/scripts/install.sh` |
-| 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径，最后跑一次 install.sh 让链接生效 |
+| 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径，最后跑一次 install.sh 让链接生效 |
 | 新增一个三方插件 | `catalog/` 建档案（来源、安装命令、skill 清单），`install.manifest` 加一行 `plugin`，README 插件表加一行，插件含 skill 则 GUIDE.md 路由加一条，最后跑一次 install.sh 完成安装 |
 | 记录新的经验习惯 | 在 HABITS.md 对应小节加一行，无需其他动作（所有已注入项目自动继承） |
 | "这个项目别用这套习惯/skill"（插件模式） | `claude plugin disable zephyr-skills --scope project`，只影响当前项目 |
@@ -227,6 +301,8 @@ templates/        新写 skill 的起步模板
 
 ## 收编的 Skill（skills/）
 
+> 标 **⚙️CC** 的只能在 Claude Code 上跑（原因见[引擎适配](#引擎适配)），其余两个引擎通用。权威判据是每个 skill frontmatter 里的 `engines:` 字段，CI 会校验。
+
 ### design — 设计品味（15 个）
 
 | Skill | 是干啥的 | 什么时候用 |
@@ -240,7 +316,7 @@ templates/        新写 skill 的起步模板
 | [high-end-visual-design](skills/design/high-end-visual-design/) | 按高端设计公司标准做网页视觉：禁廉价默认，规定字体、双层卡片、大留白、弹簧动效 | 生成或美化网页 UI（React/Tailwind/HTML），要高端质感时 |
 | [imagegen-frontend-mobile](skills/design/imagegen-frontend-mobile/) | 生成 app 原生感的移动端 UI 概念图（多屏流程、手机 mockup），只出图不写码 | 为 iOS/Android app 生成 onboarding、首页等多屏视觉概念图时 |
 | [imagegen-frontend-web](skills/design/imagegen-frontend-web/) | 生成高端网页设计参考图：每个页面 section 出一张横图，反 AI 俗套艺术指导 | 为落地页/营销站生成设计概念图（供照图实现）时 |
-| [impeccable](skills/design/impeccable/) | 前端界面设计打磨全能 skill：23 个子命令覆盖构建、评审、精修、动效、配色、排版、live 浏览器实时迭代，内置反 AI 味硬标准与 slop 检测（来自 [pbakaus/impeccable](https://github.com/pbakaus/impeccable)，v3.9.1） | 设计、重构、评审或打磨任何前端 UI，尤其要摆脱"一眼 AI 生成"的平庸感、或做 a11y/性能/响应式审计时 |
+| [impeccable](skills/design/impeccable/) | ⚙️CC 前端界面设计打磨全能 skill：23 个子命令覆盖构建、评审、精修、动效、配色、排版、live 浏览器实时迭代，内置反 AI 味硬标准与 slop 检测（来自 [pbakaus/impeccable](https://github.com/pbakaus/impeccable)，v3.9.1） | 设计、重构、评审或打磨任何前端 UI，尤其要摆脱"一眼 AI 生成"的平庸感、或做 a11y/性能/响应式审计时 |
 | [industrial-brutalist-ui](skills/design/industrial-brutalist-ui/) | 工业粗野主义 UI：瑞士印刷+军用终端美学，硬网格、巨型字体、单一红色点缀、CRT 做旧 | 数据密集仪表盘、作品集、编辑类网页想要机密蓝图/机械终端质感时 |
 | [minimalist-ui](skills/design/minimalist-ui/) | 极简编辑风 UI：暖色单色调+衬线大标题+bento 网格+微妙动效，禁渐变重阴影 | 想要 Notion 式高级极简文档风、避免 SaaS 模板感时 |
 | [redesign-existing-projects](skills/design/redesign-existing-projects/) | 对现有网站/应用做设计审计并升级到高端质感，不破坏功能 | 给已有前端项目做视觉翻新、去 AI 味时 |
@@ -251,7 +327,7 @@ templates/        新写 skill 的起步模板
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
-| [design-loop](skills/frontend/design-loop/) | "接力棒"文件驱动的自治循环建站：每轮读任务、生成一页 HTML/Tailwind、集成导航、视觉校验，再写入下一任务直到全站完成（来自 [jezweb/claude-skills](https://github.com/jezweb/claude-skills)） | 需要自动连续生成多页完整网站（"把整站建完"、"design loop"）时 |
+| [design-loop](skills/frontend/design-loop/) | ⚙️CC "接力棒"文件驱动的自治循环建站：每轮读任务、生成一页 HTML/Tailwind、集成导航、视觉校验，再写入下一任务直到全站完成（来自 [jezweb/claude-skills](https://github.com/jezweb/claude-skills)） | 需要自动连续生成多页完整网站（"把整站建完"、"design loop"）时 |
 | [image-to-code](skills/frontend/image-to-code/) | 图生代码工作流：先自生成分节设计图、深度提取设计系统，再忠实实现前端 | 视觉品质要求高的落地页/官网开发或改版，强制"先出图、再分析、后写码"时 |
 
 ### ios — iOS 开发（2 个）
@@ -265,17 +341,17 @@ templates/        新写 skill 的起步模板
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
-| [humanizer](skills/writing/humanizer/) | 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
+| [humanizer](skills/writing/humanizer/) | ⚙️CC 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
 ### general — 通用（6 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
-| [background-watch](skills/general/background-watch/) | 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
+| [background-watch](skills/general/background-watch/) | ⚙️CC 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
 | [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
 | [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
-| [workflow-orchestration](skills/general/workflow-orchestration/) | 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
+| [workflow-orchestration](skills/general/workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
 | [scaffold-init](skills/general/scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 scaffold-init 脚手架"，一次注入永久生效 |
 
 ---

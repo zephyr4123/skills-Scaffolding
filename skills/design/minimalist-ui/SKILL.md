@@ -1,6 +1,7 @@
 ---
 name: minimalist-ui
 description: Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.
+engines: [claude-code, codex]
 ---
 
 # Protocol: Premium Utilitarian Minimalism UI Architect
