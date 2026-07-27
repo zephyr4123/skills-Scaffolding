@@ -1,8 +1,26 @@
 # ios-swift-skills
 
+> ## ⚠️ 当前无法安装（2026-07-27 实测）
+>
+> 上游 `patrickserrano/skills` 的 `.claude-plugin/` 下**只有 `plugin.json`，没有 `marketplace.json`**——4 个候选市场清单路径全部 404，上游 2026-01-17 后未再推送。
+>
+> **Claude Code 与 Codex 在全新环境下 add 均失败**，报错文案是：
+>
+> ```
+> ✘ Failed to add marketplace: Marketplace file not found at 〈本地缓存路径〉
+> ```
+>
+> ⚠️ 这条报错**指向本地路径，极易被误判成自己环境坏了**，根因其实在上游仓库结构。
+> ⚠️ 另注：`claude plugin marketplace add` 失败时**退出码仍是 0**，脚本靠退出码判定不出来。
+>
+> 若某台机器上它能用，是历史缓存里留了一份 untracked 的 `marketplace.json`，**不代表新用户能装**。
+>
+> 已从 `install.manifest` 注释掉。上游补上 `marketplace.json` 后，取消该行注释即可恢复。
+> 本档案继续保留——它记录的 skill 清单与踩坑仍然有参考价值。
+
 - **来源**：Patrick Serrano — <https://github.com/patrickserrano/skills>
-- **安装**：`/plugin marketplace add patrickserrano/skills`，然后 `/plugin install ios-swift-skills@patrickserrano-skills`
-- **本机版本**：1.0.0（2026-07-02 在装）
+- **安装**：~~`/plugin marketplace add patrickserrano/skills` → `/plugin install ios-swift-skills@patrickserrano-skills`~~（见上方说明，当前失效）
+- **本机版本**：1.0.0（2026-07-02 在装，靠历史缓存）
 - **一句话**：覆盖 iOS/macOS 开发全流程的 Swift 技能包——从 SwiftUI UI 模式、性能与并发优化，到调试、性能剖析、打包发布与 GitHub issue 修复。
 
 ## Skill 清单

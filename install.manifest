@@ -1,14 +1,35 @@
 # skills-scaffolding 安装清单 —— scripts/install.sh 会读取本文件
 #
 # 行格式（空格分隔）：
-#   plugin <marketplace 来源：github repo 或 URL；官方市场填 -> <插件@市场>
-#   clone  <git 仓库地址> <装进 ~/.claude/skills 的目录名>
+#   plugin <市场来源> <插件@市场> [适用引擎]
+#   clone  <git 仓库地址> <装进 skill 根的目录名>
 #
-# skills/ 目录下收编的副本不需要写在这里，install.sh 会自动全部链接。
+# plugin 行的三个字段：
+#   市场来源   github 的 owner/repo 或完整 URL；该引擎**内建**该市场时填 `-`
+#   插件@市场  安装标识
+#   适用引擎   逗号分隔，可选值 claude-code / codex；**省略 = 两个引擎都装**
+#             声明里没有的引擎会被**明确跳过并说明原因，不计为失败**
+#
+# skills/ 目录下收编的副本不需要写在这里，install.sh 会自动全部链接
+# （并按每个 skill frontmatter 的 `engines:` 字段决定链进哪个引擎的 skill 根）。
 
-plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills
-plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill
-plugin - superpowers@claude-plugins-official
+plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill claude-code,codex
+
+# ❌ ios-swift-skills 已停用 —— 上游仓库当前**不是一个市场仓**，两个引擎都装不上。
+#   根因：upstream `patrickserrano/skills` 的 `.claude-plugin/` 下只有 `plugin.json`，
+#   **没有 marketplace.json**（4 个候选清单路径全 404，上游 2026-01-17 后未再推送）。
+#   实测（v1.7.x 全新隔离环境）：Claude Code 与 Codex 各自 add 均失败，报
+#   「Marketplace file not found at 〈本地缓存路径〉」——错误指向本地，极易误判成自己环境坏了。
+#   ⚠️ 本机若能用，是历史缓存里有一份 untracked 的 marketplace.json，**不代表新用户能装**。
+#   ⚠️ 另注：`claude plugin marketplace add` 失败时**退出码仍是 0**，脚本无法靠退出码判定。
+#   上游哪天补了 marketplace.json，取消下面这行注释即可恢复。
+# plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills claude-code,codex
+
+# superpowers —— 装在 Anthropic 官方市场 claude-plugins-official 上，
+#   该市场是 Claude Code **内建**的（所以来源填 `-`）；Codex 侧没有内建它。
+#   ⚠️ 顺序依赖：该内建市场只在**交互式 TUI 首次启动**时落地，`-p` / 脚本模式不触发。
+#   所以全新机器上必须**先起一次 `claude` 进交互界面**，再跑 install.sh，否则这条会被跳过。
+plugin - superpowers@claude-plugins-official claude-code
 
 # 示例：以 git clone 方式跟踪上游、不收编进本仓库的 skill
 # clone https://github.com/blader/humanizer humanizer

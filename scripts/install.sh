@@ -52,16 +52,24 @@ skill_engines() {
   echo "$out"
 }
 
-link_one() {  # $1=源目录 $2=目标根
-  local src="${1%/}" root="$2" name dest
+LINKED_CLAUDE=0
+LINKED_CODEX=0
+
+link_one() {  # $1=源目录 $2=目标根 $3=计数用引擎名
+  local src="${1%/}" root="$2" which="$3" name dest
   name="$(basename "$src")"
   dest="${root}/${name}"
   if [ -e "$dest" ] && [ ! -L "$dest" ]; then
     echo "  跳过 ${name}（本机已有真实目录，如需接管请先手动删除）"
     return
   fi
+  # 符号链接一律重建：ln -sfn 幂等，目标不变，只刷新 mtime
   ln -sfn "$src" "$dest"
-  echo "  已链接 ${name}"
+  echo "  [${which}] 已链接 ${name}"
+  case "$which" in
+    claude) LINKED_CLAUDE=$((LINKED_CLAUDE+1)) ;;
+    codex)  LINKED_CODEX=$((LINKED_CODEX+1)) ;;
+  esac
 }
 
 echo "== 1/4 链接收编 skill =="
@@ -70,11 +78,11 @@ echo "== 1/4 链接收编 skill =="
 for skill in "$REPO_DIR"/skills/*/*/; do
   eng="$(skill_engines "${skill%/}")"
   if [ "$HAS_CLAUDE" -eq 1 ]; then
-    case "$eng" in *claude-code*) link_one "$skill" "$CLAUDE_ROOT" ;; esac
+    case "$eng" in *claude-code*) link_one "$skill" "$CLAUDE_ROOT" claude ;; esac
   fi
   if [ "$HAS_CODEX" -eq 1 ]; then
     case "$eng" in
-      *codex*) link_one "$skill" "$CODEX_ROOT" ;;
+      *codex*) link_one "$skill" "$CODEX_ROOT" codex ;;
       *) echo "  略过 $(basename "${skill%/}") → Codex（该 skill 标了仅 Claude Code 可用）" ;;
     esac
   fi
@@ -106,8 +114,8 @@ echo "== 3/4 安装第三方插件 =="
 # Claude Code:  claude plugin marketplace add / claude plugin install
 # Codex:        codex  plugin marketplace add / codex  plugin add
 # 实测：Codex 原生读 .claude-plugin/marketplace.json 与 plugin.json，所以同一份清单两边通用。
-install_plugins() {  # $1=引擎名(claude|codex) $2=安装子命令(install|add)
-  local cli="$1" sub="$2" known installed
+install_plugins() {  # $1=引擎名(claude|codex) $2=安装子命令(install|add) $3=engines 关键字
+  local cli="$1" sub="$2" key="$3" known installed
   if ! command -v "$cli" >/dev/null 2>&1; then
     echo "  [跳过] 未找到 ${cli} CLI，${cli} 侧插件未处理"
     return
@@ -118,14 +126,29 @@ install_plugins() {  # $1=引擎名(claude|codex) $2=安装子命令(install|add
   # grep -q 匹配到就立刻退出，printf 还在写大输出时会吃 SIGPIPE(141)，
   # 而 `set -o pipefail` 会把整条管道判为失败 —— 形成「匹配越靠前越容易假阴性」的反直觉 bug。
   # （实测：codex plugin list 输出 116KB，命中位置在 1.7KB 处即稳定误报未安装。）
-  while read -r _ src id; do
+  while read -r _ src id eng; do
     [ -z "${id:-}" ] && continue
+    # 第 4 列声明适用引擎（省略 = 两个都装）。声明里没有本引擎的**明确跳过、不计失败**——
+    # 这类"装不了"由上游仓库形态决定（如只有 plugin.json 没有 marketplace.json，
+    # Claude 会自动合成单插件市场、Codex 不会），不是本机环境有问题，
+    # 别让它把整体退出码染红、吓得新用户以为全废了。
+    if [ -n "${eng:-}" ]; then
+      case "$eng" in
+        *"$key"*) ;;
+        *) echo "  [不适用] ${cli}: ${id} 按清单声明仅适用 ${eng}，跳过（非错误）"; continue ;;
+      esac
+    fi
     local mkt="${id##*@}" plugin_name="${id%%@*}" known_has_mkt=0 already=0
     case "$known" in *"$mkt"*) known_has_mkt=1 ;; esac
     case "$installed" in *"$plugin_name"*) already=1 ;; esac
     if [ "$known_has_mkt" -eq 0 ]; then
       if [ "$src" = "-" ]; then
-        echo "  [跳过] ${cli}: 市场 ${mkt} 非内建且清单未给来源，${id} 无法安装"
+        echo "  [未就绪] ${cli}: 内建市场 ${mkt} 尚未落地，${id} 本次跳过"
+        if [ "$cli" = "claude" ]; then
+          # 实测：Anthropic 官方市场只在**交互式 TUI 首次启动**时落地，-p/脚本模式不触发。
+          # 只打「跳过」太轻，新用户会当成正常而漏装。
+          echo "           → 先在终端起一次交互式 \`claude\`（进到界面即可，然后退出），再重跑本脚本"
+        fi
         continue
       fi
       echo "  [${cli}] 添加市场 ${src}"
@@ -139,8 +162,8 @@ install_plugins() {  # $1=引擎名(claude|codex) $2=安装子命令(install|add
     fi
   done < <(grep -E '^plugin[[:space:]]' "$MANIFEST" 2>/dev/null || true)
 }
-[ "$HAS_CLAUDE" -eq 1 ] && install_plugins claude install
-[ "$HAS_CODEX" -eq 1 ]  && install_plugins codex  add
+[ "$HAS_CLAUDE" -eq 1 ] && install_plugins claude install claude-code
+[ "$HAS_CODEX" -eq 1 ]  && install_plugins codex  add    codex
 
 echo "== 4/4 生成 Codex 注入入口 =="
 if bash "${REPO_DIR}/scripts/build-agents-md.sh" >/dev/null 2>&1; then
@@ -150,10 +173,20 @@ else
 fi
 
 echo
+# ★ 无论成败都先报「你已经拿到了什么」——只报失败会让新用户以为整个安装废了，
+#   而实际上核心的 skill 链接可能早就全部成功了（第三方插件失败不影响它们）。
+echo "── 本次结果 ──"
+[ "$HAS_CLAUDE" -eq 1 ] && echo "  Claude Code：${LINKED_CLAUDE} 个 skill 已链接进 ${CLAUDE_ROOT}"
+[ "$HAS_CODEX" -eq 1 ]  && echo "  Codex：      ${LINKED_CODEX} 个 skill 已链接进 ${CODEX_ROOT}"
 if [ "$FAIL" -ne 0 ]; then
-  echo "完成，但存在失败项（见上方 [失败] 标记）"
+  echo
+  echo "⚠️ 有失败项（见上方 [失败] 标记），但**上面列出的 skill 已经可用**。"
+  echo "   失败的通常是第三方插件——它们由各自作者维护，不影响本脚手架自身的 skill。"
+  echo "   可按 catalog/ 里对应档案手动安装，或直接重跑本脚本（幂等，只补缺的）。"
   exit 1
 fi
+echo "  第三方插件：按 install.manifest 处理完毕"
+echo
 echo "全部就位。"
 if [ "$HAS_CODEX" -eq 1 ]; then
   echo

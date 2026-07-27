@@ -85,6 +85,9 @@ jobs:
       - name: scaffold/AGENTS.md 与 GUIDE+HABITS 同步
         run: bash scripts/build-agents-md.sh --check
 
+      - name: .codex-plugin/plugin.json 与 engines 声明同步
+        run: bash scripts/build-codex-manifest.sh --check
+
       - name: 脚本语法闸
         run: |
           for f in scripts/*.sh; do bash -n "$f" || exit 1; done

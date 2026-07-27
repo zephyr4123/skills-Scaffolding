@@ -8,6 +8,7 @@
   },
   "homepage": "https://github.com/zephyr4123/skills-Scaffolding",
   "license": "MIT",
+  "_comment": "本文件由 scripts/build-codex-manifest.sh 从 .claude-plugin/plugin.json 与各 skill 的 engines: 字段生成，请勿手改。只列 Codex 适用的 skill —— Claude 侧读 .claude-plugin/plugin.json 拿全量。",
   "skills": [
     "./skills/design/brandkit",
     "./skills/design/design-taste-frontend",
@@ -18,24 +19,19 @@
     "./skills/design/high-end-visual-design",
     "./skills/design/imagegen-frontend-mobile",
     "./skills/design/imagegen-frontend-web",
-    "./skills/design/impeccable",
     "./skills/design/industrial-brutalist-ui",
     "./skills/design/minimalist-ui",
     "./skills/design/redesign-existing-projects",
     "./skills/design/review-animations",
     "./skills/design/stitch-design-taste",
-    "./skills/frontend/design-loop",
     "./skills/frontend/image-to-code",
-    "./skills/general/background-watch",
     "./skills/general/coding-standards",
     "./skills/general/full-output-enforcement",
     "./skills/general/multica-collab",
     "./skills/general/multica-read",
     "./skills/general/quality-discipline",
     "./skills/general/scaffold-init",
-    "./skills/general/workflow-orchestration",
     "./skills/ios/ios-verify-loop",
-    "./skills/ios/swiftui-design-principles",
-    "./skills/writing/humanizer"
+    "./skills/ios/swiftui-design-principles"
   ]
 }

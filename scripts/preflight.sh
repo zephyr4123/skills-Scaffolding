@@ -113,7 +113,8 @@ fi
 echo
 if [ "$MISSING" -ne 0 ]; then
   echo "结论：有缺口 → 运行 bash ${REPO_DIR}/scripts/install.sh 补齐"
-  echo "（install.sh 幂等：已就位的链接、已装的插件、已克隆的仓库都会跳过，不会重复下载）"
+  echo "（install.sh 幂等：符号链接会无条件重建但目标不变、已有的真实目录不接管、"
+  echo "  已装的插件跳过、已克隆的仓库 git pull——不会重复下载任何东西）"
   exit 1
 fi
 echo "结论：环境完整，无需任何安装"

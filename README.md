@@ -50,12 +50,21 @@
 
 ### 模式一：插件市场（推荐给使用者）
 
-**Claude Code**——在会话里执行两条命令：
+**Claude Code**——在会话里执行两条斜杠命令：
 
 ```
 /plugin marketplace add zephyr4123/skills-Scaffolding
 /plugin install zephyr-skills@skills-scaffolding
 ```
+
+或在终端里用**等价的 CLI 写法**（headless / CI / 脚本化 / 让 agent 代劳时用这套——`/plugin` 斜杠命令在非交互环境下不可用）：
+
+```bash
+claude plugin marketplace add zephyr4123/skills-Scaffolding
+claude plugin install zephyr-skills@skills-scaffolding
+```
+
+> 首次在一个新目录里起交互式会话时，Claude Code 会先弹一屏 workspace 信任确认（`Is this a project you created or one you trust?`），选信任才进得去。这是它的安全设计，跟本脚手架无关。
 
 **Codex**——终端里执行两条命令：
 
@@ -64,7 +73,7 @@ codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
 codex plugin add zephyr-skills@skills-scaffolding
 ```
 
-> Codex 原生读 `.claude-plugin/` 格式的市场与插件清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径，`plugin.json` 的回落在其开源实现的 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 常量里）。**同一个仓库、同一份清单，两个引擎都吃。**
+> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（23 个），Claude 读 `.claude-plugin/plugin.json`（28 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
 
 **装完你得到什么：**
 
@@ -72,7 +81,7 @@ codex plugin add zephyr-skills@skills-scaffolding
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
-> ⚠️ **Codex 用户注意**：插件自带的 hook **默认不被信任**，仅安装插件**不足以**拿到 GUIDE/HABITS 注入。首次启动 Codex 时会自动弹信任确认屏，选 `Trust all and continue` 之后 hook 才会执行（全新环境会多一个项目信任屏，合计两下）。这是 Codex 的安全设计，不是装坏了。
+> ⚠️ **Codex 用户注意**：插件自带的 hook **默认不被信任**，仅安装插件**不足以**拿到 GUIDE/HABITS 注入。首次启动 Codex 时会**自动弹**信任确认屏（不用手动敲 `/hooks`），选 `Trust all and continue` 之后 hook 才会执行。实测是**两个屏幕**（先项目信任、再 hook review），且第二屏**默认选中的是 `Review hooks` 而不是 `Trust all`**，所以最少要按 `Enter → ↓ → Enter` 三次。这是 Codex 的安全设计，不是装坏了。
 
 **日常管理：**
 
@@ -85,7 +94,7 @@ claude plugin uninstall zephyr-skills                 # 整体卸载
 
 **边界说明：**
 
-- catalog 里的三个第三方插件（ios-swift-skills、swiftui-pro、superpowers）**不会**随本插件自动安装——它们在别人的市场上，见下方[精选第三方插件](#精选第三方插件catalog)一节，五条命令装齐
+- catalog 里的第三方插件**不会**随本插件自动安装——它们在别人的市场上，各有各的装法与限制，见下方[精选第三方插件](#精选第三方插件catalog)一节
 - 插件模式是**只读订阅**：想改 skill 内容，走模式二
 
 ### 模式二：git 仓库（推荐给维护者 / 想改 skill 的人）
@@ -102,10 +111,24 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 | 探测到 | 做什么 |
 |---|---|
 | Claude Code | 28 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 23 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件，生成 `scaffold/AGENTS.md` |
+| Codex | 23 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
-脚本幂等——已就位的跳过、已装的跳过、已克隆的 `git pull`，只补缺的。
+不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
+
+**想先试用、不污染现有环境？** 脚本认三个环境变量覆盖点：
+
+```bash
+CLAUDE_SKILLS_DIR=/tmp/试用/claude \
+CODEX_SKILLS_DIR=/tmp/试用/codex \
+bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claude 与 ~/.agents
+```
+
+（第三个是 `INSTALL_MANIFEST`，可指向你自己的清单。注意这三个只覆盖**本脚本的写入目标**，不隔离引擎自身的配置与 skill 发现——引擎级隔离是 Claude Code / Codex 自己的事。）
+
+另外：`~/.claude/skills` 或 `~/.agents/skills` 下如果已经有**同名的真实目录**（不是符号链接），脚本会明确跳过并提示，**不会接管、不会覆盖**你原有的东西。
+
+脚本幂等，重跑安全：**符号链接会无条件重建**（目标不变，只是 mtime 刷新）、**已存在的真实目录不接管**（会明确跳过并提示）、已装的插件跳过、已克隆的仓库 `git pull`——不会重复下载任何东西。
 
 > 克隆到别的路径也行，脚本会从自身位置定位仓库；但默认路径能让 scaffold-init 的自动发现更顺畅。
 
@@ -137,25 +160,39 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 ## 精选第三方插件（catalog/）
 
-这套脚手架的另一半价值：不只收编 skill，还替你**把第三方插件的坑踩完了**——每个都在真实项目里用过、建了档案（来源、装法、每个 skill 是干啥的），试错成本已经付过。目前三件，五条命令装齐：
+这套脚手架的另一半价值：不只收编 skill，还替你**把第三方插件的坑踩完了**——每个都在真实项目里用过、建了档案（来源、装法、每个 skill 是干啥的），试错成本已经付过。
 
+**Claude Code**（会话内斜杠命令，或终端里用等价的 CLI 写法）：
+
+```bash
+# 终端 CLI 写法（headless / 脚本化 / agent 操作用这套）
+claude plugin marketplace add twostraws/swiftui-agent-skill
+claude plugin install swiftui-pro@swiftui-agent-skill
+claude plugin install superpowers@claude-plugins-official
 ```
-/plugin marketplace add patrickserrano/skills
-/plugin install ios-swift-skills@patrickserrano-skills
-/plugin marketplace add twostraws/swiftui-agent-skill
-/plugin install swiftui-pro@swiftui-agent-skill
-/plugin install superpowers@claude-plugins-official
+
+会话内则是同名的斜杠形式：`/plugin marketplace add …`、`/plugin install …`。
+
+**Codex**：
+
+```bash
+codex plugin marketplace add https://github.com/twostraws/swiftui-agent-skill
+codex plugin add swiftui-pro@swiftui-agent-skill
 ```
 
-Codex 上换成 `codex plugin marketplace add <仓库 URL>` + `codex plugin add <插件@市场>`；或者直接跑 `scripts/install.sh`，它按 `install.manifest` 给两个引擎各装一遍。
+或者直接跑 `scripts/install.sh`，它按 `install.manifest` 给每个引擎装它装得上的那些。
 
-| 插件 | 为什么值得装 | 档案 |
-|---|---|---|
-| **ios-swift-skills** | iOS 开发一包全覆盖：模拟器运行与调试、xctrace 性能剖析、Swift 6 并发审查、SwiftUI 性能审计、Liquid Glass、App Store 发布与 changelog、GitHub issue 修复流（10 个 skill） | [查看](catalog/ios-swift-skills.md) |
-| **swiftui-pro** | Paul Hudson（Hacking with Swift 作者）出品，按九份参考清单系统审查 SwiftUI 代码的现代 API、数据流与性能 | [查看](catalog/swiftui-pro.md) |
-| **superpowers** | 软件工程流程纪律全家桶（obra/Jesse Vincent 出品，经 Anthropic 官方市场分发）：脑暴、计划、TDD、系统化调试（14 个 skill）——很重，建议按需点名使用 | [查看](catalog/superpowers.md) |
+| 插件 | 为什么值得装 | 引擎 | 档案 |
+|---|---|---|---|
+| **swiftui-pro** | Paul Hudson（Hacking with Swift 作者）出品，按九份参考清单系统审查 SwiftUI 代码的现代 API、数据流与性能 | 两个都行 | [查看](catalog/swiftui-pro.md) |
+| **superpowers** | 软件工程流程纪律全家桶（obra/Jesse Vincent 出品，经 Anthropic 官方市场分发）：脑暴、计划、TDD、系统化调试（14 个 skill）——很重，建议按需点名使用 | 仅 Claude Code | [查看](catalog/superpowers.md) |
+| ~~**ios-swift-skills**~~ | iOS 开发一包全覆盖（10 个 skill）。**⚠️ 当前装不上**，见下方说明 | 暂不可用 | [查看](catalog/ios-swift-skills.md) |
 
-插件本体由各自作者维护更新，本仓库只存档案不存副本——所以它们**不会**随 zephyr-skills 自动安装，要用就敲上面的命令；git 模式则由 install.sh 按 `install.manifest` 自动装齐。
+> ⚠️ **`superpowers` 有个顺序依赖**：它所在的 Anthropic 官方市场 `claude-plugins-official` 是 Claude Code 内建的，但**只在交互式界面首次启动时才落地**，`-p` / 脚本模式不触发。所以全新机器上要**先在终端起一次 `claude`（进到界面再退出），再跑 install.sh**，否则这条会被跳过。install.sh 检测到这种情况会打印同样的提示。
+
+> ⚠️ **`ios-swift-skills` 当前对所有新用户不可用**（v1.7.x 实测）：上游 `patrickserrano/skills` 的 `.claude-plugin/` 下只有 `plugin.json`，**没有 `marketplace.json`**，两个引擎 add 都会失败。报错文案是「Marketplace file not found at 〈本地缓存路径〉」——**指向本地路径，极易误判成自己环境坏了**，根因其实在上游仓库结构。已从 `install.manifest` 注释掉；上游补上清单后取消注释即可恢复。
+
+插件本体由各自作者维护更新，本仓库只存档案不存副本——所以它们**不会**随 zephyr-skills 自动安装，要用就敲上面的命令；git 模式则由 install.sh 按 `install.manifest` 自动处理。
 
 ---
 
@@ -166,7 +203,7 @@ Codex 上换成 `codex plugin marketplace add <仓库 URL>` + `codex plugin add 
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 28 个 | ✅ 23 个（5 个标 ⚙️CC 的跑不了，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 28 个 | ✅ 23 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.md` + `@import` 符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.md`**，不会重复注入 |
@@ -188,6 +225,25 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 - **环境变量**：Codex 执行 hook 时会**主动注入** `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA` 做兼容
 
 所以本仓这些 skill 的正文**一个字都没为 Codex 改过**，两边共用。
+
+### 两条分发通道各自怎么过滤
+
+| 通道 | 靠什么过滤 | 实测结果 |
+|---|---|---|
+| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 23 个，5 个 Claude-only 一个没链 |
+| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（23 条），Claude 读 `.claude-plugin/plugin.json`（28 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
+
+双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
+
+```
+.codex-plugin/plugin.json  →  .claude-plugin/plugin.json  →  .cursor-plugin/plugin.json
+```
+
+它优先读第一个；而 **Claude Code 只认 `.claude-plugin/plugin.json`**（实测其加载日志：`Checking plugin zephyr-skills: skillsPaths=28 paths`，多出来的 `.codex-plugin/` 目录对它完全惰性）。同一个仓库、同一条安装命令、同一个版本号——两个引擎各读各的清单。
+
+> `.codex-plugin/plugin.json` 是**派生产物**，由 `scripts/build-codex-manifest.sh` 从 `.claude-plugin/plugin.json` + 各 skill 的 `engines:` 生成，CI 校验其与源同步。手工维护的永远只有那两处。
+>
+> 为什么不用别的办法（都实测否掉了）：`agents/openai.yaml` 的 `policy.products` 只有正向白名单、`claude-code` 不是合法取值；manifest 的 `interface` 字段被忽略；`config.toml` 的 `[[skills.config]]` 是用户侧配置、不随插件分发；拆成两个 plugin 要维护两套 ID 与版本。**光靠 GUIDE 标注和正文声明也不够——路由阶段只看得到 name/description/path，正文那时还没被读取。**
 
 ### 哪 5 个在 Codex 上跑不了，为什么
 
@@ -265,7 +321,7 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 |---|---|
 | "安装 scaffold-init 脚手架" / "注入 skill 指南"（仅 git 模式） | 调用 `scaffold-init` skill；若本机没有该 skill，先按下一行恢复环境，再执行 `<仓库>/skills/general/scaffold-init/SKILL.md` 里的步骤 |
 | 恢复/检查环境（仅 git 模式） | 先 `bash <仓库>/scripts/preflight.sh`（只读，退出码 0=完整 1=有缺口）；**仅当有缺口时**才 `bash <仓库>/scripts/install.sh` |
-| 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径，最后跑一次 install.sh 让链接生效 |
+| 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径、跑 `bash scripts/build-codex-manifest.sh` 重新生成 Codex 侧清单（CI 会校验同步），最后跑一次 install.sh 让链接生效 |
 | 新增一个三方插件 | `catalog/` 建档案（来源、安装命令、skill 清单），`install.manifest` 加一行 `plugin`，README 插件表加一行，插件含 skill 则 GUIDE.md 路由加一条，最后跑一次 install.sh 完成安装 |
 | 记录新的经验习惯 | 在 HABITS.md 对应小节加一行，无需其他动作（所有已注入项目自动继承） |
 | "这个项目别用这套习惯/skill"（插件模式） | `claude plugin disable zephyr-skills --scope project`，只影响当前项目 |
@@ -283,16 +339,21 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 
 ```
 skills/           收编的 skill 完整副本，按领域分组（design/frontend/ios/writing/general）
-catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途
-scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与经验，活文档）
-.claude-plugin/   marketplace.json + plugin.json：本仓库同时是一个可订阅的插件市场
+                  每个 SKILL.md 的 frontmatter 用 engines: 声明适用引擎，是全仓的过滤真相源
+catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
+scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
+                  AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
+.claude-plugin/   marketplace.json + plugin.json（28 个 skill）：Claude Code 读这份
+.codex-plugin/    plugin.json（23 个 skill）：Codex 优先读这份，派生产物（勿手改）
 .github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
-install.manifest  声明式清单：要装哪些插件、克隆哪些 git 来源 skill
+install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill
 scripts/
-  install.sh      一键恢复：链接收编 skill + 装插件 + 克隆 git skill（幂等）
-  preflight.sh    只读体检：报告环境缺口，退出码 0=完整 1=有缺
-templates/        新写 skill 的起步模板
+  install.sh              一键恢复：按引擎链接 skill + 装插件 + 克隆 git skill（幂等）
+  preflight.sh            只读体检：按引擎报告环境缺口，退出码 0=完整 1=有缺
+  build-agents-md.sh      生成 scaffold/AGENTS.md，--check 校验与源同步
+  build-codex-manifest.sh 生成 .codex-plugin/plugin.json，--check 校验与源同步
+templates/        新写 skill 的起步模板（已含 engines: 字段）
 ```
 
 同一份内容、两条分发通道：**插件市场模式**（消费者视图——只读订阅、hook 自动注入、自动更新）和 **git 仓库模式**（维护者视图——符号链接可直接改、scaffold-init 按项目注入）。选一条用即可。
@@ -389,7 +450,7 @@ plugin - superpowers@claude-plugins-official
 | 自己写新 skill | 从 `templates/skill-template/` 复制起步，写完按"收散装 skill"流程走 |
 | 改了 GUIDE/HABITS/skill 正文（发版） | bump `.claude-plugin/` 两个 json 里的 version → commit + push，**其余全自动**：GitHub Actions 会校验清单一致性，并对新版本自动打 `v<版本>` 与 `zephyr-skills--v<版本>` 双 tag、生成 Release。git 用户 pull 即生效；插件订阅者 `claude plugin update` 后生效 |
 
-> 嫌手动登记麻烦？把这些动作丢给项目里的 Claude 做——它会按[操作手册](#给-claude-code-的操作手册)执行。
+> 嫌手动登记麻烦？把这些动作丢给项目里的 AI 助手做——它会按[操作手册](#给-ai-助手的操作手册)执行。
 
 ---
 
