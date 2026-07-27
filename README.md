@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-24-blue)
+![Skills](https://img.shields.io/badge/skills-25-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 
 *两条命令订阅全套 skill 与协作习惯 —— 或 git clone 完全掌控*
@@ -57,7 +57,7 @@
 
 **装完你得到什么：**
 
-- 全部 24 个 skill 立即可用（以 `zephyr-skills:xxx` 命名空间注册，Claude 自动按场景调用）
+- 全部 25 个 skill 立即可用（以 `zephyr-skills:xxx` 命名空间注册，Claude 自动按场景调用）
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置，连"安装 scaffold-init 脚手架"都不用说
 - **更新省心**：仓库发新版后 `claude plugin update zephyr-skills` 一条命令拿到最新（市场清单也会定期自动刷新）
 
@@ -140,7 +140,7 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 24 ──────▶ 直接注册进 Claude Code         │
+│        ├── skills/ × 25 ──────▶ 直接注册进 Claude Code         │
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -254,10 +254,11 @@ templates/        新写 skill 的起步模板
 | [design-loop](skills/frontend/design-loop/) | "接力棒"文件驱动的自治循环建站：每轮读任务、生成一页 HTML/Tailwind、集成导航、视觉校验，再写入下一任务直到全站完成（来自 [jezweb/claude-skills](https://github.com/jezweb/claude-skills)） | 需要自动连续生成多页完整网站（"把整站建完"、"design loop"）时 |
 | [image-to-code](skills/frontend/image-to-code/) | 图生代码工作流：先自生成分节设计图、深度提取设计系统，再忠实实现前端 | 视觉品质要求高的落地页/官网开发或改版，强制"先出图、再分析、后写码"时 |
 
-### ios — iOS 开发（1 个）
+### ios — iOS 开发（2 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
+| [ios-verify-loop](skills/ios/ios-verify-loop/) | iOS 开发-验证闭环：先查工具链反「我本地验不了」→ 按层取证（编译 / 本地同镜像服务 / 模拟器点击驱动 AXe / 手势探针 / 接口正负边界样本 / 只读 SQL 对账）→ 双轨审查兜住自验漏网 → 按规格报证据，含 20+ 条实测踩坑（自写） | 改完 iOS 代码要自己拿到证据再交付、做全 App 逐屏 UI 审计、不想把验证甩给人时 |
 | [swiftui-design-principles](skills/ios/swiftui-design-principles/) | SwiftUI/WidgetKit 原生设计规范：间距网格、字体层级、语义色、原生组件（作者 arjitj2，MIT） | 写或改 SwiftUI 视图、iOS 小组件等原生 Apple UI 时 |
 
 ### writing — 写作（1 个）
@@ -273,7 +274,7 @@ templates/        新写 skill 的起步模板
 | [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
 | [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
-| [workflow-orchestration](skills/general/workflow-orchestration/) | 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）与承重纪律（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时 |
+| [workflow-orchestration](skills/general/workflow-orchestration/) | 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
 | [scaffold-init](skills/general/scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 scaffold-init 脚手架"，一次注入永久生效 |
 
 ---
