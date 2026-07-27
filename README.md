@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-25-blue)
+![Skills](https://img.shields.io/badge/skills-26-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 
 *两条命令订阅全套 skill 与协作习惯 —— 或 git clone 完全掌控*
@@ -57,7 +57,7 @@
 
 **装完你得到什么：**
 
-- 全部 25 个 skill 立即可用（以 `zephyr-skills:xxx` 命名空间注册，Claude 自动按场景调用）
+- 全部 26 个 skill 立即可用（以 `zephyr-skills:xxx` 命名空间注册，Claude 自动按场景调用）
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置，连"安装 scaffold-init 脚手架"都不用说
 - **更新省心**：仓库发新版后 `claude plugin update zephyr-skills` 一条命令拿到最新（市场清单也会定期自动刷新）
 
@@ -140,7 +140,7 @@ Claude 会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 25 ──────▶ 直接注册进 Claude Code         │
+│        ├── skills/ × 26 ──────▶ 直接注册进 Claude Code         │
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -267,10 +267,11 @@ templates/        新写 skill 的起步模板
 |---|---|---|
 | [humanizer](skills/writing/humanizer/) | 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
-### general — 通用（5 个）
+### general — 通用（6 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
+| [background-watch](skills/general/background-watch/) | 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
 | [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
 | [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |

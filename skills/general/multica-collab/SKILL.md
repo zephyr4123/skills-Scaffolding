@@ -236,6 +236,7 @@ multica issue comment list <identifier>         # 收产物
 | `issue label add` 报 `expected a UUID prefix` | 传了标签**名字**。先 `label list --output json` 查 UUID 再挂 |
 | 某个 flag 只写 `string` 不告诉合法值 | 故意传个非法值，报错会回显合法值全集 |
 | 切了 workspace 之后 issue 没人接 | **runtime 是 workspace 作用域的**（`runtime list` = "List runtimes **in the workspace**"）。切换后 daemon 会把本机 runtime 以**新 UUID** 重新注册进新 workspace——`runtime list` 复核并用新 id 建 agent，别用旧 id |
+| agent 早干完在 in_review 等着，我半天才发现 | **Multica 不会把通知推进你的会话**——CLI 无 watch/follow/webhook 能力，`issue subscriber` 只进 Multica 自己的收件箱。托管出去 = 你不问就不知道 | 架一个轮询监控，把「记得回去查」变成「它来找我」；**注意要给 `todo` 无人认领和 `in_progress` 挂死各配一个哨兵**，只监听状态变化会让这两种静默失败和正常运行长得一样。做法见 `background-watch` skill（Claude Code 专属） |
 
 ## 红线（铁律之外的补充）
 

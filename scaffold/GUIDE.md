@@ -30,6 +30,7 @@
 - **Multica 工作区操作**（派 issue 给 agent、看板/轨迹/汇报、onboarding、贴 multica.ai URL）：`multica-collab`
 - **Multica 记忆读取**（把 workspace 的 issue 网络/结论/轨迹/成本读全读透、只读不写、token 高效）：`multica-read`
 - **多 agent Workflow 编排**（有份量的多步工程活，决定何时上编排、选什么形状与范式；长跑 workflow 卡住 / 大批失败 / 放量前评估也走它）：`workflow-orchestration`
+- **让外部长任务跑完来找你**（外部系统上的任务 / CI / 部署 / 远程队列这类不会主动通知你的活；含「静默≠正常」的哨兵纪律）：`background-watch`（**Claude Code 专属**，依赖 Monitor）
 - **开发流程纪律**（superpowers 插件：`brainstorming`、`writing-plans`、`systematic-debugging` 等）：**仅在用户点名要求时使用，绝不自主加载**——它很重、时间-收益杠杆低，日常用轻量 skill 小步快跑 + workflow 对抗性审查替代
 
 ## 原则
