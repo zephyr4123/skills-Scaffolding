@@ -1,6 +1,6 @@
 ---
 name: multica-collab
-description: Use when 用户提到 multica——想把任务派给 multica agent、看任务/看板/运行轨迹、做 onboarding 接入、出工作汇报，或贴出 multica 实例的 issue/run URL 时。让任意 coding agent（Claude Code / Codex / 任何带 CLI 的引擎）成为用户与 Multica 之间的操作界面：发 issue、观测 run、验收产物、救活死锁，全程 CLI，用户零点击。
+description: Use when 用户提到 multica——想把任务派给 multica agent、看任务/看板/运行轨迹、做 onboarding 接入、出工作汇报，或贴出 multica 实例的 issue/run URL 时。让任意 coding agent（Claude Code / Codex / 任何带 CLI 的引擎）成为用户与 Multica 之间的操作界面：发 issue、观测 run、验收产物、救活死锁，全程 CLI，用户零点击。含把 issue 建成**带全属性的工作管理对象**（project / 优先级 / 排期 / 正交标签 / 父子与 stage / PR 自动关联），以及建专职 agent 的配置边界。
 ---
 
 # Multica Collab：用对话驾驭 AI 原生工作区
@@ -23,7 +23,7 @@ Multica（开源：<https://github.com/multica-ai/multica>，官方云：<https:
 1. **CLI 是唯一清单**：能力边界 = `multica --help` 的输出。不确定的命令先 `multica <cmd> --help` 自查，**绝不编造命令或参数**。概念疑问查官方文档 <https://multica.ai/docs>（没有网页抓取工具就用 `curl` 拉），不凭记忆复述。
 2. **URL 一律转 CLI**：用户贴任何 multica 实例（官方云或自托管域名）的 `/issues/<id>`、`/runs/<id>`、`/agents/<id>` 类 URL 时，从 path 提取 ID 用 CLI 拉数据。**禁止**用浏览器工具打开（SPA + 登录墙，无登录态必跳 login，纯浪费）。例外：首次 OAuth、用户明确说"帮我打开网页看看"、拉官方文档。
 3. **ID 规则**：CLI 接 identifier（如 `TES-3`）或完整 36 位 UUID，**不接纯数字**，也不接 web UI 显示的 8 位截断 ID。截断 ID → 先 `issue runs <identifier> --output json` 拿完整 UUID。
-4. **多身份先对表**：`--profile <name>` 隔离不同 server/账号；同账号多 workspace 用 `multica workspace --help` 自查列出/切换命令。**任何写操作前确认 profile 与 workspace 指向**——把个人任务发进公司空间（或反之）是事故，拿不准就问用户。
+4. **多身份先对表**：`--profile <name>` 隔离不同 server/账号；同账号多 workspace 用 `multica workspace --help` 自查列出/切换命令。**任何写操作前确认 profile 与 workspace 指向**——把个人任务发进公司空间（或反之）是事故，拿不准就问用户。⚠️ `workspace switch` 改的是**该 profile 的默认指向**，同 profile 的其他会话会在脚下被换掉；切之前先跟用户确认，切之后立刻 `runtime list` 复核算力有没有跟过来（runtime 是 workspace 作用域的）。
 5. **破坏性操作先确认**：删除 issue/agent、修改他人负责的条目、批量改状态，先向用户复述再执行。
 6. 结构化数据一律 `--output json`，给用户看时翻译成人话。
 7. **issue 合法状态**（以 `multica issue status --help` 为准）：`backlog / todo / in_progress / in_review / done / blocked / cancelled`。别发明状态名。
@@ -104,6 +104,18 @@ multica agent create \
 
 **第三步**，`multica agent list` 确认在列。
 
+**建专职 agent 时还能配这些**（`agent create` / `agent update` 同参数，以 `--help` 为准）：
+
+| 参数 | 用处 |
+|---|---|
+| `--thinking-level` | 推理档位。**取值域按 runtime 而定、服务端校验**（Claude 系 `low…max`，Codex 系 `none…xhigh`），机械活降档省钱省时 |
+| `--model` | 指定模型。**优先用它而不是往 `--custom-args` 里塞 `--model`**——某些 provider 会拒 |
+| `--custom-env` | 注入环境变量（配 `--custom-env-stdin` / `--custom-env-file` 避免进 shell history 和 `ps`） |
+| `--mcp-config` | 给 agent 配 MCP server（同样有 stdin/file 变体，里面常带 token） |
+| `--max-concurrent-tasks` | 并发上限，默认 6 |
+
+⚠️ **`--custom-env` 别拿来改引擎自身的 HOME 类变量做隔离**（如给 Codex agent 设 `CODEX_HOME`）——那会把 agent **自己**的配置与认证一起重定向，agent 直接废掉。要沙箱化实验，就在**任务里逐条命令**加环境变量前缀，别在 agent 级别设。
+
 ### 0.4 冒烟测试（验证闭环）
 
 ```bash
@@ -152,6 +164,35 @@ multica issue comment list <identifier>         # 收产物
 
 **issue 生命周期**：`todo`（等认领）→ agent 秒级认领 → `in_progress`（运行中，轨迹实时可看）→ 干完自动 `in_review`（等人类验收——这是 HITL 设计，**绝不擅自替用户验收**）→ 验收后 `done`。
 
+### 把 issue 建成工作管理对象（别建光秃秃的）
+
+上面四要素管的是 **description 怎么写**；这一节管的是 **issue 本身该挂哪些字段**。两件事，都要做。
+
+> **只带 title + description + assignee 的 issue，是一张待办条，不是看板。** Multica 作为工作管理面的全部价值——筛选、排期、依赖、追溯——都长在结构化字段上。不挂字段，你只是把 TODO 换了个地方存。
+
+建 issue 时**顺手**挂上（补一次的成本远高于建的时候带上）：
+
+| 要什么 | 怎么挂 | 说明 |
+|---|---|---|
+| 项目归属 | `--project <uuid>` | 先 `project create --title X --icon 🧩 --status in_progress` |
+| **PR 自动关联** | `project create --repo <github-url>` | 挂了仓库后，**PR 的分支名 / 标题 / 正文里出现 issue identifier 即自动关联** |
+| 优先级 | `--priority` | `urgent / high / medium / low / none` |
+| 排期 | `--start-date` `--due-date` | `YYYY-MM-DD`，别留空——留空就没法按周看 |
+| 依赖 | `--parent <issue-id>` | 父子关系 |
+| 并行阶段 | `--stage N` | 同一 stage 的子任务**全部**完成才唤醒父任务的 assignee，天然的 barrier |
+| 标签 | `issue label add <issue-id> <label-id>` | ⚠️ 见下方踩坑 |
+| 附件 | `--attachment <路径>` | 可重复 |
+
+**★ 探枚举的通法：传一个非法值，报错会回显合法值全集。** `--priority __x__` → `invalid priority "__x__"; valid values: urgent, high, medium, low, none`。`--help` 里常常只写 `string` 不列取值域，这招比猜和试快得多，对 project status（`planned/in_progress/paused/completed/cancelled`）同样有效。
+
+**标签要设计成正交维度，别糊成一个平面列表。** 一维答"这是什么活"（如 `kind:验证 / kind:改造 / kind:调研 / kind:决策 / kind:宪法`），另一维答"关谁的事"（如按引擎、按模块、按人）。两维正交，才能一条命令筛出"所有还没验的 X 侧事项"；糊成平面列表就只能挨个翻。建标签：`label create --name <名> --color '#3b82f6'`（**color 必填** hex）。
+
+⚠️ **`issue label add` 只认 label 的 UUID，不认名字**（传名字报 `expected a UUID prefix containing only hex characters`）。先 `label list --output json` 建一次名字→id 映射再挂。
+
+**★ 规格要焊进 agent 的 instructions，不靠自觉。** 手工补一轮属性是治标——下一批 issue 照样光秃秃。把「每个 issue 必须带齐 project / priority / 起止日期 / 至少各一个维度的标签 / 四要素正文」写进**负责建 issue 的那个 agent 的 instructions**，它建出来的天生就是全属性的。**这是本节唯一治本的一条。**
+
+> 其余 issue 侧对象以 `--help` 现场自查为准：`issue metadata`（每 issue 的 KV）、`issue pull-requests`、`issue subscriber`、`issue children`（按 stage 分组看子任务）。
+
 ## Phase 2：托管纪律（长任务的正确姿势）
 
 **什么任务值得托管**：预计连续跑 30 分钟以上、或轨迹需要留档/给他人复盘的 → 托管给 multica agent；几分钟的小改动 → 你自己本地直接干，别为仪式感托管。
@@ -191,6 +232,10 @@ multica issue comment list <identifier>         # 收产物
 | run-messages 一开始就 fail | 看第一条 error——多半是任务书没给够输入（对照任务书四要素补 comment 后 rerun） |
 | daemon 起不来 | `multica daemon logs` 看原因；常见：token 失效、上一个进程没退干净（先 `daemon stop` 再 start） |
 | 连续同错 failed ≥2 次 | 死锁，走 Phase 2 的[死锁识别与救活](#死锁识别与救活) |
+| 看板只有一列标题，没法筛/排期/看依赖 | 建 issue 时没挂结构化字段 → 见[把 issue 建成工作管理对象](#把-issue-建成工作管理对象别建光秃秃的)；治本是把字段规格写进建 issue 那个 agent 的 instructions |
+| `issue label add` 报 `expected a UUID prefix` | 传了标签**名字**。先 `label list --output json` 查 UUID 再挂 |
+| 某个 flag 只写 `string` 不告诉合法值 | 故意传个非法值，报错会回显合法值全集 |
+| 切了 workspace 之后 issue 没人接 | **runtime 是 workspace 作用域的**（`runtime list` = "List runtimes **in the workspace**"）。切换后 daemon 会把本机 runtime 以**新 UUID** 重新注册进新 workspace——`runtime list` 复核并用新 id 建 agent，别用旧 id |
 
 ## 红线（铁律之外的补充）
 

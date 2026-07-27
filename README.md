@@ -272,7 +272,7 @@ templates/        新写 skill 的起步模板
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
 | [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
-| [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
+| [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
 | [workflow-orchestration](skills/general/workflow-orchestration/) | 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
 | [scaffold-init](skills/general/scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 scaffold-init 脚手架"，一次注入永久生效 |
