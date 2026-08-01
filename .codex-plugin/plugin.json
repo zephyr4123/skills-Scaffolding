@@ -1,7 +1,7 @@
 {
   "name": "zephyr-skills",
   "description": "个人 Agent Skill 脚手架（Claude Code / Codex 双引擎）：设计/前端/iOS/写作/通用全域 skill + 场景路由指南与协作习惯的会话自动注入",
-  "version": "1.8.1",
+  "version": "1.9.0",
   "author": {
     "name": "zephyr4123",
     "url": "https://github.com/zephyr4123"
@@ -10,17 +10,23 @@
   "license": "MIT",
   "_comment": "本文件由 scripts/build-codex-manifest.sh 从 .claude-plugin/plugin.json 与各 skill 的 engines: 字段生成，请勿手改。只列 Codex 适用的 skill —— Claude 侧读 .claude-plugin/plugin.json 拿全量。",
   "skills": [
+    "./skills/design/animation-vocabulary",
+    "./skills/design/apple-design",
     "./skills/design/brandkit",
     "./skills/design/design-taste-frontend",
     "./skills/design/design-taste-frontend-v1",
     "./skills/design/emil-design-eng",
+    "./skills/design/find-animation-opportunities",
     "./skills/design/frontend-design",
     "./skills/design/gpt-taste",
     "./skills/design/high-end-visual-design",
     "./skills/design/imagegen-frontend-mobile",
     "./skills/design/imagegen-frontend-web",
+    "./skills/design/improve-animations",
     "./skills/design/industrial-brutalist-ui",
     "./skills/design/minimalist-ui",
+    "./skills/design/pick-ui-library",
+    "./skills/design/prototype",
     "./skills/design/redesign-existing-projects",
     "./skills/design/review-animations",
     "./skills/design/stitch-design-taste",

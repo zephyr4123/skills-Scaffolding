@@ -16,7 +16,9 @@
 
 - **设计、评审、打磨界面的默认入口**：`impeccable` ⚙️CC（23 个子命令：craft 构建、audit 审计、polish 精修、animate 动效、live 浏览器迭代等，内置反 AI 味硬标准）
 - **写落地页/营销站，防 AI 默认审美**：`design-taste-frontend`（v1 仅为兼容保留）；风格化叠加按需选：`minimalist-ui`（极简编辑风）、`industrial-brutalist-ui`（工业粗野）、`high-end-visual-design`（高端质感）、`gpt-taste`（Awwwards 向）、`frontend-design`（通用审美）
-- **动画与交互手感**：写的时候用 `emil-design-eng`（Emil Kowalski 设计工程哲学）；审查动效代码用 `review-animations`（十条硬标准，Block/Approve 裁决）
+- **动画，按手上这件事分工**（四条都只管 Web，原生走 `swiftui-design-principles`）：边写边参考 → `emil-design-eng`；界面太死、想知道哪儿该加 → `find-animation-opportunities`（只读，出 5~7 条清单外加一份「考虑过但否掉了」）；已有动效想整体盘一遍排改进顺序 → `improve-animations`（只读审计，写成带精确数值的计划文件交给别人改）；一个 diff 过闸 → `review-animations`（十条硬标准，Block/Approve）。**想直接改出来别用这四条，走 `impeccable animate`**
+- **手指驱动的交互**（拖拽、滑动关闭、bottom sheet、中途抓住反向）：`apple-design`（速度交接、动量落点公式、橡皮筋阻尼、半透明材质；组件手感找 Emil，手指物理找它，两个都是叠加层不抢主导）。**说得出效果、叫不出名字**：`animation-vocabulary`（术语反查，只给名字不写码）
+- **要点名才启动的两个**（不会自动加载）：`prototype`——同一个组件做 3~5 个方向真不一样的可用版本，翻着比，选中的才写进代码（**它会自删原型目录，别在脏工作区跑**）；`pick-ui-library`——17 条「任务→用哪个库」钦定表，**仅限 React Web**，存量项目以 package.json 和主导 skill 已定的设计系统为准
 - **高视觉要求的实现流程**：`image-to-code`（先出设计图、再提取设计系统、后写码）
 - **自动建整站**：`design-loop` ⚙️CC（接力棒循环，一页接一页）
 - **只出概念图不写码**：`imagegen-frontend-web` / `imagegen-frontend-mobile`；品牌视觉物料：`brandkit`

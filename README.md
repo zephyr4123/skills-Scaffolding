@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-28-blue)
+![Skills](https://img.shields.io/badge/skills-34-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
@@ -73,7 +73,7 @@ codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
 codex plugin add zephyr-skills@skills-scaffolding
 ```
 
-> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（23 个），Claude 读 `.claude-plugin/plugin.json`（28 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
+> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（29 个），Claude 读 `.claude-plugin/plugin.json`（34 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
 
 **装完你得到什么：**
 
@@ -110,8 +110,8 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 | 探测到 | 做什么 |
 |---|---|
-| Claude Code | 28 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 23 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
+| Claude Code | 34 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 29 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
 不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
@@ -203,7 +203,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 28 个 | ✅ 23 个（两条通道都过滤，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 34 个 | ✅ 29 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.md` + `@import` 符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.md`**，不会重复注入 |
@@ -230,7 +230,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 | 通道 | 靠什么过滤 | 实测结果 |
 |---|---|---|
-| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 23 个，5 个 Claude-only 一个没链 |
+| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 29 个，5 个 Claude-only 一个没链 |
 | **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（23 条），Claude 读 `.claude-plugin/plugin.json`（28 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
 
 双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
@@ -270,7 +270,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 28 ──────▶ 注册进 Claude Code（Codex 23 个）│
+│        ├── skills/ × 34 ──────▶ 注册进 Claude Code（Codex 29 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -343,8 +343,8 @@ skills/           收编的 skill 完整副本，按领域分组（design/fronte
 catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
                   AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
-.claude-plugin/   marketplace.json + plugin.json（28 个 skill）：Claude Code 读这份
-.codex-plugin/    plugin.json（23 个 skill）：Codex 优先读这份，派生产物（勿手改）
+.claude-plugin/   marketplace.json + plugin.json（34 个 skill）：Claude Code 读这份
+.codex-plugin/    plugin.json（29 个 skill）：Codex 优先读这份，派生产物（勿手改）
 .github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
 install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill
@@ -364,22 +364,28 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 
 > 标 **⚙️CC** 的只能在 Claude Code 上跑（原因见[引擎适配](#引擎适配)），其余两个引擎通用。权威判据是每个 skill frontmatter 里的 `engines:` 字段，CI 会校验。
 
-### design — 设计品味（15 个）
+### design — 设计品味（21 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
+| [animation-vocabulary](skills/design/animation-vocabulary/) | 动效术语反查词典：Web 动画术语按 12 类整理，从「看着像什么、感觉像什么」倒查出准确叫法，一次给首选词加 1~2 个近义词并说清差别；词表里没有就直说没有，不许现编（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 效果描述得出来但叫不出名字，需要一个准确的词去跟设计师沟通、写进需求、或喂给 AI 当 prompt 时。⚠️ 词表漏了 scroll snap / FLIP / scrub，它会答「没有」而不是猜 |
+| [apple-design](skills/design/apple-design/) | 把 Apple 的流体界面做法翻译成网页实现：手指 1:1 跟随、动画随时能抓住反向、松手把速度交给弹簧、用减速公式算落点再吸附、边界橡皮筋；另含半透明材质分层、随字号变的字距行高、reduced-motion/transparency/contrast 三档降级。给的是能直接抄的公式和数值（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 做手势驱动的网页交互——拖拽、滑动关闭、bottom sheet、可打断的转场、弹簧调参时；写原生 SwiftUI 走 swiftui-design-principles。⚠️ 文中「~300ms tap delay」是十年前的知识，现代浏览器早已移除，别去项目里找它 |
 | [brandkit](skills/design/brandkit/) | 高端品牌套件图像生成：以品牌策略为先，产出 logo 系统、品牌规范板、identity deck 级演示图 | 需要为产品/品牌生成 logo 概念、品牌视觉板、品牌手册风格图像时 |
 | [design-taste-frontend](skills/design/design-taste-frontend/) | 反 AI 味前端设计：先推断设计方向和三档参数，再按大量禁令产出不模板化的页面 | 写落地页、作品集、营销站或改版，要避免紫渐变/居中 hero/Inter 等 AI 默认审美时 |
 | [design-taste-frontend-v1](skills/design/design-taste-frontend-v1/) | 上面那个的旧版规则集（v1） | 只在需要与 v1 行为完全兼容时用，新项目默认用 v2 |
 | [emil-design-eng](skills/design/emil-design-eng/) | Emil Kowalski 的设计工程哲学：动画决策框架（是否动/缓动/时长）、组件手感细节、性能与可访问性规则（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 做 Web UI 动画/交互打磨，想让界面细节有高级手感（spring、手势、popover/toast）时 |
+| [find-animation-opportunities](skills/design/find-animation-opportunities/) | 扫代码库找「该动却没动」的地方：四道闸逐条筛（一天会被看见多少次 / 动机能不能被命名 / 300ms 内做不做得完 / 会不会妨碍读数据），键盘触发和高频操作一律否决，最后只留 5~7 条，每条带 file:line 和确切的曲线、时长、属性，还强制列出「考虑过但否掉了」的名单。只读不改代码（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 觉得 Web 界面太死板、想先拿一张有优先级的动效待办清单，或想搞清楚哪些地方其实**不该**加动画时；审已有动效代码走 review-animations，原生 iOS 别用 |
 | [frontend-design](skills/design/frontend-design/) | 指导生成有独特审美的前端界面代码，强调字体、配色、动效与布局的大胆方向（来自 [anthropics/skills](https://github.com/anthropics/skills)，Apache-2.0） | 构建网页组件/页面/应用，希望视觉精致独特、不落俗套时 |
 | [gpt-taste](skills/design/gpt-taste/) | 强制随机化布局、AIDA 结构、宽幅排版、bento 网格与 GSAP 滚动动效 | 生成落地页等 Web UI，想要 Awwwards 级设计感时 |
 | [high-end-visual-design](skills/design/high-end-visual-design/) | 按高端设计公司标准做网页视觉：禁廉价默认，规定字体、双层卡片、大留白、弹簧动效 | 生成或美化网页 UI（React/Tailwind/HTML），要高端质感时 |
 | [imagegen-frontend-mobile](skills/design/imagegen-frontend-mobile/) | 生成 app 原生感的移动端 UI 概念图（多屏流程、手机 mockup），只出图不写码 | 为 iOS/Android app 生成 onboarding、首页等多屏视觉概念图时 |
 | [imagegen-frontend-web](skills/design/imagegen-frontend-web/) | 生成高端网页设计参考图：每个页面 section 出一张横图，反 AI 俗套艺术指导 | 为落地页/营销站生成设计概念图（供照图实现）时 |
 | [impeccable](skills/design/impeccable/) | ⚙️CC 前端界面设计打磨全能 skill：23 个子命令覆盖构建、评审、精修、动效、配色、排版、live 浏览器实时迭代，内置反 AI 味硬标准与 slop 检测（来自 [pbakaus/impeccable](https://github.com/pbakaus/impeccable)，v3.9.1） | 设计、重构、评审或打磨任何前端 UI，尤其要摆脱"一眼 AI 生成"的平庸感、或做 a11y/性能/响应式审计时 |
+| [improve-animations](skills/design/improve-animations/) | 整个仓库动效代码的只读审计器：按八类逐条挑问题并回原位复核，排成优先级表让你挑，再把选中的各写成一份计划文件——精确到文件行号、目标 cubic-bezier、时长、验收怎么看，交给别的 agent（哪怕便宜模型）照着改；自己一行源码都不动（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 接手一个 Web 项目觉得「动起来不对劲」、想系统过一遍并排出先改哪个时；或想把判断和改代码拆开。只审一个 diff 用 review-animations。⚠️ 它会在仓库根建 `plans/` 写文件，有推送闸门的项目先决定这目录进不进版本控制 |
 | [industrial-brutalist-ui](skills/design/industrial-brutalist-ui/) | 工业粗野主义 UI：瑞士印刷+军用终端美学，硬网格、巨型字体、单一红色点缀、CRT 做旧 | 数据密集仪表盘、作品集、编辑类网页想要机密蓝图/机械终端质感时 |
 | [minimalist-ui](skills/design/minimalist-ui/) | 极简编辑风 UI：暖色单色调+衬线大标题+bento 网格+微妙动效，禁渐变重阴影 | 想要 Notion 式高级极简文档风、避免 SaaS 模板感时 |
+| [pick-ui-library](skills/design/pick-ui-library/) | 17 条「前端任务 → 用哪个库」的钦定对照表（toast 用 Sonner、拖拽用 dnd kit、长列表用 Virtuoso、状态用 zustand…），只给一个答案不列菜单，另附 6 条「你正在手搓一个已有库解决的问题」自查；仅覆盖 React Web（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 在 React 前端项目里要新引入一个 UI 依赖、懒得自己比选时。需显式点名。⚠️ 表里只给官网不给包名，两处会装错：Base UI 的包是 `@base-ui-components/react`（裸 `base-ui` 是停更的无关包）、Virtuoso 是 `react-virtuoso` |
+| [prototype](skills/design/prototype/) | 把你描述的一个 UI 组件做成 3~5 个方向真不一样的可用版本（换配色换文案不算，必须是布局、密度、性格或交互模型上的不同答案，且每个都能真的点、真的动），全挂在同一个底部切换条上按数字键实时翻看对比；候选全程待在隔离目录碰不到生产代码，选中哪个才写进去（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 手上是一个具体的小东西（toast、价格卡、某个按钮）拿不准该做成什么样，想先并排看几个真不一样的方案再拍板时；只能显式点名，仅限 Web。⚠️ 定稿后它会自删整个原型目录 |
 | [redesign-existing-projects](skills/design/redesign-existing-projects/) | 对现有网站/应用做设计审计并升级到高端质感，不破坏功能 | 给已有前端项目做视觉翻新、去 AI 味时 |
 | [review-animations](skills/design/review-animations/) | 动画代码严审：十条不可妥协标准（缓动、时长 300ms 内、GPU 属性、可中断性、reduced-motion 等）挑刺式审查，输出 Before/After 表和 Block/Approve 裁决（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 对 CSS transition/keyframes/Framer Motion 等动效代码做高标准 craft review 时 |
 | [stitch-design-taste](skills/design/stitch-design-taste/) | 为 Google Stitch 生成 DESIGN.md 设计规范，强制高级反俗套 UI 风格 | 用 Google Stitch 生成界面前，需要统一设计品味约束时 |
