@@ -4,7 +4,7 @@
 # 为什么需要它：
 #   插件模式下，引擎直接读插件清单的 `skills` 数组来注册 skill，
 #   **不经过 install.sh 的 `engines:` 过滤**。所以只有一份 .claude-plugin/plugin.json 时，
-#   Codex 会把 28 个全注册，包括 5 个只适用 Claude Code 的。
+#   Codex 会把全量 skill 都注册，包括那几个只适用 Claude Code 的。
 #
 #   Codex 按 DISCOVERABLE_PLUGIN_MANIFEST_PATHS 顺序探测清单：
 #       .codex-plugin/plugin.json  →  .claude-plugin/plugin.json  →  .cursor-plugin/plugin.json

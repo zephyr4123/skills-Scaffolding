@@ -77,7 +77,7 @@ codex plugin add zephyr-skills@skills-scaffolding
 
 **装完你得到什么：**
 
-- Claude Code 上全部 **28** 个 skill、Codex 上 **23** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- Claude Code 上全部 **34** 个 skill、Codex 上 **29** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
@@ -231,7 +231,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 | 通道 | 靠什么过滤 | 实测结果 |
 |---|---|---|
 | **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 29 个，5 个 Claude-only 一个没链 |
-| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（23 条），Claude 读 `.claude-plugin/plugin.json`（28 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
+| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（29 条），Claude 读 `.claude-plugin/plugin.json`（34 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
 
 双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
 
@@ -239,7 +239,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 .codex-plugin/plugin.json  →  .claude-plugin/plugin.json  →  .cursor-plugin/plugin.json
 ```
 
-它优先读第一个；而 **Claude Code 只认 `.claude-plugin/plugin.json`**（实测其加载日志：`Checking plugin zephyr-skills: skillsPaths=28 paths`，多出来的 `.codex-plugin/` 目录对它完全惰性）。同一个仓库、同一条安装命令、同一个版本号——两个引擎各读各的清单。
+它优先读第一个；而 **Claude Code 只认 `.claude-plugin/plugin.json`**（实测其加载日志形如 `Checking plugin zephyr-skills: skillsPaths=<N> paths`，其中 N 恒等于 `.claude-plugin/plugin.json` 的 skills 条数、与 `.codex-plugin/` 那份的条数无关——多出来的 `.codex-plugin/` 目录对它完全惰性）。同一个仓库、同一条安装命令、同一个版本号——两个引擎各读各的清单。
 
 > `.codex-plugin/plugin.json` 是**派生产物**，由 `scripts/build-codex-manifest.sh` 从 `.claude-plugin/plugin.json` + 各 skill 的 `engines:` 生成，CI 校验其与源同步。手工维护的永远只有那两处。
 >
@@ -384,10 +384,10 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 | [improve-animations](skills/design/improve-animations/) | 整个仓库动效代码的只读审计器：按八类逐条挑问题并回原位复核，排成优先级表让你挑，再把选中的各写成一份计划文件——精确到文件行号、目标 cubic-bezier、时长、验收怎么看，交给别的 agent（哪怕便宜模型）照着改；自己一行源码都不动（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 接手一个 Web 项目觉得「动起来不对劲」、想系统过一遍并排出先改哪个时；或想把判断和改代码拆开。只审一个 diff 用 review-animations。⚠️ 它会在仓库根建 `plans/` 写文件，有推送闸门的项目先决定这目录进不进版本控制 |
 | [industrial-brutalist-ui](skills/design/industrial-brutalist-ui/) | 工业粗野主义 UI：瑞士印刷+军用终端美学，硬网格、巨型字体、单一红色点缀、CRT 做旧 | 数据密集仪表盘、作品集、编辑类网页想要机密蓝图/机械终端质感时 |
 | [minimalist-ui](skills/design/minimalist-ui/) | 极简编辑风 UI：暖色单色调+衬线大标题+bento 网格+微妙动效，禁渐变重阴影 | 想要 Notion 式高级极简文档风、避免 SaaS 模板感时 |
-| [pick-ui-library](skills/design/pick-ui-library/) | 17 条「前端任务 → 用哪个库」的钦定对照表（toast 用 Sonner、拖拽用 dnd kit、长列表用 Virtuoso、状态用 zustand…），只给一个答案不列菜单，另附 6 条「你正在手搓一个已有库解决的问题」自查；仅覆盖 React Web（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 在 React 前端项目里要新引入一个 UI 依赖、懒得自己比选时。需显式点名。⚠️ 表里只给官网不给包名，两处会装错：Base UI 的包是 `@base-ui-components/react`（裸 `base-ui` 是停更的无关包）、Virtuoso 是 `react-virtuoso` |
+| [pick-ui-library](skills/design/pick-ui-library/) | 19 条「前端任务 → 用哪个库」的钦定对照表（toast 用 Sonner、拖拽用 dnd kit、长列表用 Virtuoso、状态用 zustand…），只给一个答案不列菜单，另附 6 条「你正在手搓一个已有库解决的问题」自查；仅覆盖 React Web（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 在 React 前端项目里要新引入一个 UI 依赖、懒得自己比选时。需显式点名。⚠️ 表里只给官网不给包名，两处会装错：Base UI 的包是 `@base-ui-components/react`（裸 `base-ui` 是停更的无关包）、Virtuoso 是 `react-virtuoso` |
 | [prototype](skills/design/prototype/) | 把你描述的一个 UI 组件做成 3~5 个方向真不一样的可用版本（换配色换文案不算，必须是布局、密度、性格或交互模型上的不同答案，且每个都能真的点、真的动），全挂在同一个底部切换条上按数字键实时翻看对比；候选全程待在隔离目录碰不到生产代码，选中哪个才写进去（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 手上是一个具体的小东西（toast、价格卡、某个按钮）拿不准该做成什么样，想先并排看几个真不一样的方案再拍板时；只能显式点名，仅限 Web。⚠️ 定稿后它会自删整个原型目录 |
 | [redesign-existing-projects](skills/design/redesign-existing-projects/) | 对现有网站/应用做设计审计并升级到高端质感，不破坏功能 | 给已有前端项目做视觉翻新、去 AI 味时 |
-| [review-animations](skills/design/review-animations/) | 动画代码严审：十条不可妥协标准（缓动、时长 300ms 内、GPU 属性、可中断性、reduced-motion 等）挑刺式审查，输出 Before/After 表和 Block/Approve 裁决（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 对 CSS transition/keyframes/Framer Motion 等动效代码做高标准 craft review 时 |
+| [review-animations](skills/design/review-animations/) | 动画代码严审：十条不可妥协标准（缓动、时长 300ms 内、GPU 属性、可中断性、reduced-motion 等）挑刺式审查，输出 Before/After 表和 Block/Approve 裁决（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 对 CSS transition/keyframes/Framer Motion 等动效代码做高标准 craft review 时。需显式点名（frontmatter 带 `disable-model-invocation`） |
 | [stitch-design-taste](skills/design/stitch-design-taste/) | 为 Google Stitch 生成 DESIGN.md 设计规范，强制高级反俗套 UI 风格 | 用 Google Stitch 生成界面前，需要统一设计品味约束时 |
 
 ### frontend — 前端工程（2 个）
