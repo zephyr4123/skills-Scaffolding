@@ -398,7 +398,7 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 |---|---|---|
 | [humanizer](skills/writing/humanizer/) | ⚙️CC 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
-### general — 通用（8 个）
+### general — 通用（9 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
@@ -406,6 +406,7 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 | [zephyr-coding-standards](skills/general/zephyr-coding-standards/) | 编码与工程标准：不为写而写 / 融入现有代码、结构三清晰（目录/结构/模块）、设计与实现纪律（可读性、错误处理、日志、性能）、留痕文档、依赖选型四看、环境隔离与可回滚，含交付前自检清单（自写） | 写代码、改代码、做架构设计、选第三方库、配环境或准备交付时 |
 | [zephyr-quality-discipline](skills/general/zephyr-quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
 | [zephyr-secrets-hygiene](skills/general/zephyr-secrets-hygiene/) | 本机凭据治理：按「谁能读到」分层归位（第 0 层根本不存 → keychain → 600+按需加载 → 系统标准位 → 永不全局 export）、登记册要能机器对账、`withkey` 按需加载器；退役前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单（`ssh-keygen -p` 非 TTY 下静默设空口令还照报成功等）。**不带脚本**：给扫描位置表、「只吐键名不吐值」的命令写法与加载器参考实现，让用户写进自己的环境（自写） | 整理/审计本机密钥、判断某 token 还能不能删、给新机器配凭据、或新增一份凭据要决定放哪时 |
+| [zephyr-nested-git](skills/general/zephyr-nested-git/) | 「外层协作仓 + 多个独立业务代码仓」的 nested-git 指针拓扑：外层零业务代码，只存指针 manifest（url/path/prod_branch）与协作产物，代码仓独立 clone 嵌在外层被 .gitignore 挡住、各推各的远端；指针是仓库级不是提交级，用版本关联精度换两层平台/凭据/CI 的彻底解耦。含单文件参考 CLI（红线在代码里：pull 只 ff-only、push 永不 force、fetch 失败不吞、prod_branch 漂移告警）+ 空壳 MR 四道校验 + 运维台通用纪律（dry-run 默认、写操作拒绝 all、凭据不进 argv）（自写） | 新项目要定多仓关联方式（submodule/subtree/合仓/nested 选哪个）、初始化或承接 nested 拓扑项目、给外层仓写跨仓 git 运维 CLI 时 |
 | [zephyr-multica-collab](skills/general/zephyr-multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [zephyr-multica-read](skills/general/zephyr-multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
 | [zephyr-workflow-orchestration](skills/general/zephyr-workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |

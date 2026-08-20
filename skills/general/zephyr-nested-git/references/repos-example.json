@@ -1,0 +1,30 @@
+{
+  "_note": "多仓拓扑 + 线上坐标的唯一真相源，跨仓 CLI 全部命令读这里。改拓扑改本文件，不改 CLI 代码。`_` 开头的键是注释，工具一律跳过 —— 坐标背后的取证过程写进 _note，比丢进聊天记录强。",
+  "repos": {
+    "ios": {
+      "url": "https://git.example.com/products/demo/ios.git",
+      "path": "ios",
+      "prod_branch": "main",
+      "prod_version": "1.4.2",
+      "_version_source": "示例：prod_version 的证据来源写在这里（仓内 tag / 商店后台 / 数据侧实测）。没有发布标记背书时，prod_branch 只是取证推断，必须写明依据。"
+    },
+    "android": {
+      "url": "https://git.example.com/products/demo/android.git",
+      "path": "android",
+      "prod_branch": "release/2.1",
+      "prod_version": "2.1.0",
+      "_note": "示例：线上分支不是 main 的仓正是 prod_branch 字段存在的理由 —— 本地 checkout 在 main 时 status 会红字告警。"
+    },
+    "api-service": {
+      "url": "https://git.example.com/products/demo/api-service.git",
+      "path": "backend/api-service",
+      "prod_branch": "main"
+    },
+    "billing-service": {
+      "url": "https://git.example.com/products/demo/billing-service.git",
+      "path": "backend/billing-service",
+      "prod_branch": "main",
+      "_note": "示例：薄壳仓（业务代码由 CI 注入，仓里只有 CI 配置）在拓扑上天生就是指针，clone 下来内容少是预期不是故障 —— 这类说明就写在它自己的条目里。"
+    }
+  }
+}
