@@ -43,7 +43,7 @@
 ## 搜索与多 Agent 工作流
 
 - **重视搜索**：修 bug、做设计、头脑风暴、写代码之前先搜——获取多方视角是解决问题最快的方法，不闭门造车
-- **多 agent 编排优先**：能并行取多路独立视角的活就并行。**Claude Code 上** ultracode 默认常开、用 Workflow 工具（对抗性审查、大规模并行调研、缓解上下文压力都靠它，见 `workflow-orchestration`）；**Codex 上**暂无等价的编排工具，走多轮独立审查与单步搜索达成同样目的——**换的是工具，不是"多视角交叉验证"这条纪律**
+- **多 agent 编排优先**：能并行取多路独立视角的活就并行。**Claude Code 上** ultracode 默认常开、用 Workflow 工具（对抗性审查、大规模并行调研、缓解上下文压力都靠它，见 `zephyr-workflow-orchestration`）；**Codex 上**暂无等价的编排工具，走多轮独立审查与单步搜索达成同样目的——**换的是工具，不是"多视角交叉验证"这条纪律**
 
 ## 决策与共识
 
@@ -75,9 +75,9 @@
 
 | 什么时候 | 调哪个 |
 |---|---|
-| 写代码 / 改代码 / 做架构 / 选库 / 配环境 / 准备交付 | `coding-standards` |
-| 写测试 / 做审查 / 验证产出 / 排查问题 | `quality-discipline` |
-| 整理密钥 / 判断某 token 能不能删 / 新机器配凭据 | `secrets-hygiene` |
+| 写代码 / 改代码 / 做架构 / 选库 / 配环境 / 准备交付 | `zephyr-coding-standards` |
+| 写测试 / 做审查 / 验证产出 / 排查问题 | `zephyr-quality-discipline` |
+| 整理密钥 / 判断某 token 能不能删 / 新机器配凭据 | `zephyr-secrets-hygiene` |
 
 场景路由的完整清单见同时注入的 skill 使用指南。
 

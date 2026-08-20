@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-35-blue)
+![Skills](https://img.shields.io/badge/skills-22-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
@@ -20,7 +20,7 @@
 1. **收编**：把散落各处的 Agent Skill 收进一个有版本管理的仓库，配上"每个是干啥的"总索引
 2. **市场分发**：本仓库自身就是一个插件市场，**Claude Code 与 Codex 都能订阅**，各两条命令拿到全套
 3. **一键恢复**：git 模式下任何机器一条命令装齐全部 skill 和插件，幂等、只补缺、不重复下载
-4. **会话注入**：让每次会话自动知道**什么场景用哪个 skill**（GUIDE.md）和**主人喜欢怎么干活**（HABITS.md）——插件模式由 hook 完成，git 模式说一句"安装 scaffold-init 脚手架"
+4. **会话注入**：让每次会话自动知道**什么场景用哪个 skill**（GUIDE.md）和**主人喜欢怎么干活**（HABITS.md）——插件模式由 hook 完成，git 模式说一句"安装 zephyr-scaffold-init 脚手架"
 
 > 这份 README 同时写给两类读者：**人类**（往下看快速开始）和 **AI 助手**（见[给 AI 助手的操作手册](#给-ai-助手的操作手册)——如果你是一个正在读这份文档的模型，无论跑在 Claude Code 还是 Codex 上，那一节都是为你写的）。
 
@@ -73,11 +73,11 @@ codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
 codex plugin add zephyr-skills@skills-scaffolding
 ```
 
-> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（30 个），Claude 读 `.claude-plugin/plugin.json`（35 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
+> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（17 个），Claude 读 `.claude-plugin/plugin.json`（22 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
 
 **装完你得到什么：**
 
-- Claude Code 上全部 **35** 个 skill、Codex 上 **30** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- Claude Code 上全部 **22** 个 skill、Codex 上 **17** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
@@ -110,8 +110,8 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 | 探测到 | 做什么 |
 |---|---|
-| Claude Code | 35 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 30 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
+| Claude Code | 22 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 17 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
 不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
@@ -130,17 +130,17 @@ bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claud
 
 脚本幂等，重跑安全：**符号链接会无条件重建**（目标不变，只是 mtime 刷新）、**已存在的真实目录不接管**（会明确跳过并提示）、已装的插件跳过、已克隆的仓库 `git pull`——不会重复下载任何东西。
 
-> 克隆到别的路径也行，脚本会从自身位置定位仓库；但默认路径能让 scaffold-init 的自动发现更顺畅。
+> 克隆到别的路径也行，脚本会从自身位置定位仓库；但默认路径能让 zephyr-scaffold-init 的自动发现更顺畅。
 
 ### 新项目（仅 git 模式；插件模式已由 hook 全自动注入，**不要**再说这句话，会双重注入）
 
 在项目目录里对 Claude Code 或 Codex 说一句：
 
-> **安装 scaffold-init 脚手架**
+> **安装 zephyr-scaffold-init 脚手架**
 
 > 请带上 skill 名说全——只说"装脚手架"是个通用词，可能给你装成别的框架脚手架（真实踩过的坑）。
 
-它会执行 `scaffold-init` skill：先体检环境（缺 skill 就补、全齐就零动作），再按引擎注入：
+它会执行 `zephyr-scaffold-init` skill：先体检环境（缺 skill 就补、全齐就零动作），再按引擎注入：
 
 | 引擎 | 注入方式 |
 |---|---|
@@ -149,7 +149,7 @@ bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claud
 
 两侧同一套机制、同一个目标文件，都不复制内容——仓库里改一行，所有已注入项目下次会话自动跟进。项目自己的 `CLAUDE.md` 不受影响（与 `CLAUDE.local.md` 同时加载）。两个入口可安全并存：**Codex 默认不读 `CLAUDE.md` / `CLAUDE.local.md`**，不会重复注入。
 
-> 前提：这台机器跑过一次上面的安装命令（否则模型还不认识 scaffold-init 这个 skill）。
+> 前提：这台机器跑过一次上面的安装命令（否则模型还不认识 zephyr-scaffold-init 这个 skill）。
 
 ### 日常
 
@@ -203,7 +203,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 35 个 | ✅ 30 个（两条通道都过滤，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 22 个 | ✅ 17 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.local.md` **本身**是符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.local.md`**，不会重复注入 |
@@ -230,8 +230,8 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 | 通道 | 靠什么过滤 | 实测结果 |
 |---|---|---|
-| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 30 个，5 个 Claude-only 一个没链 |
-| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（30 条），Claude 读 `.claude-plugin/plugin.json`（35 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
+| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 17 个，5 个 Claude-only 一个没链 |
+| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（17 条），Claude 读 `.claude-plugin/plugin.json`（22 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
 
 双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
 
@@ -251,8 +251,8 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 | Skill | 原因 |
 |---|---|
-| `workflow-orchestration` | 整篇建立在 Claude Code 的 Workflow 工具上（`parallel`/`pipeline`、`effort`、缓存前缀链、journal 字段），换引擎需重写而非改措辞 |
-| `background-watch` | 依赖 `Monitor` 与后台任务两个 harness 能力 |
+| `zephyr-workflow-orchestration` | 整篇建立在 Claude Code 的 Workflow 工具上（`parallel`/`pipeline`、`effort`、缓存前缀链、journal 字段），换引擎需重写而非改措辞 |
+| `zephyr-background-watch` | 依赖 `Monitor` 与后台任务两个 harness 能力 |
 | `impeccable` | 正文 37 处硬编码 `node .claude/skills/impeccable/scripts/…`，装到 Codex 的 `.agents/skills` 下第一步就 ENOENT。**上游本体其实支持 Codex**，靠它自己的安装器改写路径，而本仓只收了裸副本——这是打包缺陷不是方法论缺陷 |
 | `design-loop` | 上游作者自己在 frontmatter 声明 `compatibility: claude-code-only`，尊重上游不擅自扩大 |
 | `humanizer` | 上游声明支持 Claude Code 与 OpenCode，未提 Codex，同样不替它扩大 |
@@ -270,7 +270,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 35 ──────▶ 注册进 Claude Code（Codex 30 个）│
+│        ├── skills/ × 22 ──────▶ 注册进 Claude Code（Codex 17 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -291,7 +291,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │  Claude Code 插件         ──claude plugin install──▶ 市场    │
 │  scripts/preflight.sh：只读体检，报告缺口，不动任何东西       │
 └──────────────┬───────────────────────────────────────────┘
-               │ scaffold-init skill（说"安装 scaffold-init 脚手架"触发）
+               │ zephyr-scaffold-init skill（说"安装 zephyr-scaffold-init 脚手架"触发）
 ┌─ 项目层 ──────▼───────────────────────────────────────────┐
 │  <项目>/CLAUDE.local.md ──链接──▶ 仓库/scaffold/AGENTS.md      │
 │  <项目>/AGENTS.md       ──链接──▶ 仓库/scaffold/AGENTS.md      │
@@ -305,7 +305,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 1. **全程符号链接，不复制内容。** 仓库里改一行 GUIDE/HABITS/skill 正文，所有机器所有项目下次会话自动生效，不存在过期副本。
 2. **项目层必须做成"入口文件本身是符号链接"，绝不能用 `@import`。** Claude Code 展开 `CLAUDE.md` 里的 `@path` 时有一道**外部引用闸**：路径解析出的真实位置必须落在项目根**之内**，否则**静默丢弃**——不报错、不提示。符号链接确实会被跟随，但跟过去仍在项目外，照样被拦；`.claude/rules/` 目录同样受这道闸管。唯一不受限的是入口文件本身——`CLAUDE.md` / `CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件，不是 include，链接指向哪儿都读得到。
    > ⚠️ 这里原先写的是"相对路径 import 会跟随符号链接，这是反复实验得出的结论"——**半对半错，代价惨重**。链接确实被跟随，但跟过去落在项目外照样被拦掉；正是对的那半句让这个错误设计一直没被怀疑。2026-08-20 用 9 组对照实验 + 独立复验定位，此前它已在 9 个项目里**静默空转了一个多月**，每次注入都"看起来成功"。教训：这类机制的失效是无声的，注入完必须让新会话背出内容才算数。
-3. **一切可重复执行。** preflight.sh 纯只读；install.sh 与 scaffold-init 幂等（已就位的链接刷新、已装的插件跳过），且 scaffold-init 会顺手把老写法的残留清掉。任何一步中断了重跑即可，不会产生冗余。
+3. **一切可重复执行。** preflight.sh 纯只读；install.sh 与 zephyr-scaffold-init 幂等（已就位的链接刷新、已装的插件跳过），且 zephyr-scaffold-init 会顺手把老写法的残留清掉。任何一步中断了重跑即可，不会产生冗余。
 
 ---
 
@@ -313,13 +313,13 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 如果你是一个 Claude Code 或 Codex 会话，用户让你操作这个脚手架，按下表办事。
 
-**第 0 步，先判定模式**：跑 `claude plugin list`（Codex 上跑 `codex plugin list`）——里面有 `zephyr-skills` 就是**插件模式**，skill 与注入已由插件承载，下表标「仅 git 模式」的行**不要执行**（跑 preflight / install.sh / scaffold-init 会造成双模式共存、双重注入），对应意图直接回答"本机是插件模式，无需此操作"。没有该插件才按 git 模式继续。
+**第 0 步，先判定模式**：跑 `claude plugin list`（Codex 上跑 `codex plugin list`）——里面有 `zephyr-skills` 就是**插件模式**，skill 与注入已由插件承载，下表标「仅 git 模式」的行**不要执行**（跑 preflight / install.sh / zephyr-scaffold-init 会造成双模式共存、双重注入），对应意图直接回答"本机是插件模式，无需此操作"。没有该插件才按 git 模式继续。
 
-git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试）：① 默认 `~/coding/personal/skills-scaffolding`；② `readlink ~/.claude/skills/scaffold-init` 反查（链接目标的上三级就是仓库根）；③ 都没有则 `git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding`。
+git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试）：① 默认 `~/coding/personal/skills-scaffolding`；② `readlink ~/.claude/skills/zephyr-scaffold-init` 反查（链接目标的上三级就是仓库根）；③ 都没有则 `git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding`。
 
 | 用户意图 | 你该做的 |
 |---|---|
-| "安装 scaffold-init 脚手架" / "注入 skill 指南"（仅 git 模式） | 调用 `scaffold-init` skill；若本机没有该 skill，先按下一行恢复环境，再执行 `<仓库>/skills/general/scaffold-init/SKILL.md` 里的步骤 |
+| "安装 zephyr-scaffold-init 脚手架" / "注入 skill 指南"（仅 git 模式） | 调用 `zephyr-scaffold-init` skill；若本机没有该 skill，先按下一行恢复环境，再执行 `<仓库>/skills/general/zephyr-scaffold-init/SKILL.md` 里的步骤 |
 | 恢复/检查环境（仅 git 模式） | 先 `bash <仓库>/scripts/preflight.sh`（只读，退出码 0=完整 1=有缺口）；**仅当有缺口时**才 `bash <仓库>/scripts/install.sh` |
 | 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径、跑 `bash scripts/build-codex-manifest.sh` 重新生成 Codex 侧清单（CI 会校验同步），最后跑一次 install.sh 让链接生效 |
 | 新增一个三方插件 | `catalog/` 建档案（来源、安装命令、skill 清单），`install.manifest` 加一行 `plugin`，README 插件表加一行，插件含 skill 则 GUIDE.md 路由加一条，最后跑一次 install.sh 完成安装 |
@@ -343,8 +343,8 @@ skills/           收编的 skill 完整副本，按领域分组（design/fronte
 catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
                   AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
-.claude-plugin/   marketplace.json + plugin.json（35 个 skill）：Claude Code 读这份
-.codex-plugin/    plugin.json（30 个 skill）：Codex 优先读这份，派生产物（勿手改）
+.claude-plugin/   marketplace.json + plugin.json（22 个 skill）：Claude Code 读这份
+.codex-plugin/    plugin.json（17 个 skill）：Codex 优先读这份，派生产物（勿手改）
 .github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
 install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill
@@ -356,52 +356,40 @@ scripts/
 templates/        新写 skill 的起步模板（已含 engines: 字段）
 ```
 
-同一份内容、两条分发通道：**插件市场模式**（消费者视图——只读订阅、hook 自动注入、自动更新）和 **git 仓库模式**（维护者视图——符号链接可直接改、scaffold-init 按项目注入）。选一条用即可。
+同一份内容、两条分发通道：**插件市场模式**（消费者视图——只读订阅、hook 自动注入、自动更新）和 **git 仓库模式**（维护者视图——符号链接可直接改、zephyr-scaffold-init 按项目注入）。选一条用即可。
 
 ---
 
 ## 收编的 Skill（skills/）
 
-> 标 **⚙️CC** 的只能在 Claude Code 上跑（原因见[引擎适配](#引擎适配)），其余两个引擎通用。权威判据是每个 skill frontmatter 里的 `engines:` 字段，CI 会校验。
+> 标 **⚙️CC** 的只能在 Claude Code 上跑（原因见[引擎适配](#引擎适配)），其余两个引擎通用。**命名约定：`zephyr-` 前缀 = 自写，无前缀 = 外部收编（保留上游原名）。**权威判据是每个 skill frontmatter 里的 `engines:` 字段，CI 会校验。
 
-### design — 设计品味（21 个）
+### design — 设计品味（10 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
 | [animation-vocabulary](skills/design/animation-vocabulary/) | 动效术语反查词典：Web 动画术语按 12 类整理，从「看着像什么、感觉像什么」倒查出准确叫法，一次给首选词加 1~2 个近义词并说清差别；词表里没有就直说没有，不许现编（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 效果描述得出来但叫不出名字，需要一个准确的词去跟设计师沟通、写进需求、或喂给 AI 当 prompt 时。⚠️ 词表漏了 scroll snap / FLIP / scrub，它会答「没有」而不是猜 |
 | [apple-design](skills/design/apple-design/) | 把 Apple 的流体界面做法翻译成网页实现：手指 1:1 跟随、动画随时能抓住反向、松手把速度交给弹簧、用减速公式算落点再吸附、边界橡皮筋；另含半透明材质分层、随字号变的字距行高、reduced-motion/transparency/contrast 三档降级。给的是能直接抄的公式和数值（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 做手势驱动的网页交互——拖拽、滑动关闭、bottom sheet、可打断的转场、弹簧调参时；写原生 SwiftUI 走 swiftui-design-principles。⚠️ 文中「~300ms tap delay」是十年前的知识，现代浏览器早已移除，别去项目里找它 |
-| [brandkit](skills/design/brandkit/) | 高端品牌套件图像生成：以品牌策略为先，产出 logo 系统、品牌规范板、identity deck 级演示图 | 需要为产品/品牌生成 logo 概念、品牌视觉板、品牌手册风格图像时 |
-| [design-taste-frontend](skills/design/design-taste-frontend/) | 反 AI 味前端设计：先推断设计方向和三档参数，再按大量禁令产出不模板化的页面 | 写落地页、作品集、营销站或改版，要避免紫渐变/居中 hero/Inter 等 AI 默认审美时 |
-| [design-taste-frontend-v1](skills/design/design-taste-frontend-v1/) | 上面那个的旧版规则集（v1） | 只在需要与 v1 行为完全兼容时用，新项目默认用 v2 |
 | [emil-design-eng](skills/design/emil-design-eng/) | Emil Kowalski 的设计工程哲学：动画决策框架（是否动/缓动/时长）、组件手感细节、性能与可访问性规则（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 做 Web UI 动画/交互打磨，想让界面细节有高级手感（spring、手势、popover/toast）时 |
 | [find-animation-opportunities](skills/design/find-animation-opportunities/) | 扫代码库找「该动却没动」的地方：四道闸逐条筛（一天会被看见多少次 / 动机能不能被命名 / 300ms 内做不做得完 / 会不会妨碍读数据），键盘触发和高频操作一律否决，最后只留 5~7 条，每条带 file:line 和确切的曲线、时长、属性，还强制列出「考虑过但否掉了」的名单。只读不改代码（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 觉得 Web 界面太死板、想先拿一张有优先级的动效待办清单，或想搞清楚哪些地方其实**不该**加动画时；审已有动效代码走 review-animations，原生 iOS 别用 |
 | [frontend-design](skills/design/frontend-design/) | 指导生成有独特审美的前端界面代码，强调字体、配色、动效与布局的大胆方向（来自 [anthropics/skills](https://github.com/anthropics/skills)，Apache-2.0） | 构建网页组件/页面/应用，希望视觉精致独特、不落俗套时 |
-| [gpt-taste](skills/design/gpt-taste/) | 强制随机化布局、AIDA 结构、宽幅排版、bento 网格与 GSAP 滚动动效 | 生成落地页等 Web UI，想要 Awwwards 级设计感时 |
-| [high-end-visual-design](skills/design/high-end-visual-design/) | 按高端设计公司标准做网页视觉：禁廉价默认，规定字体、双层卡片、大留白、弹簧动效 | 生成或美化网页 UI（React/Tailwind/HTML），要高端质感时 |
-| [imagegen-frontend-mobile](skills/design/imagegen-frontend-mobile/) | 生成 app 原生感的移动端 UI 概念图（多屏流程、手机 mockup），只出图不写码 | 为 iOS/Android app 生成 onboarding、首页等多屏视觉概念图时 |
-| [imagegen-frontend-web](skills/design/imagegen-frontend-web/) | 生成高端网页设计参考图：每个页面 section 出一张横图，反 AI 俗套艺术指导 | 为落地页/营销站生成设计概念图（供照图实现）时 |
 | [impeccable](skills/design/impeccable/) | ⚙️CC 前端界面设计打磨全能 skill：23 个子命令覆盖构建、评审、精修、动效、配色、排版、live 浏览器实时迭代，内置反 AI 味硬标准与 slop 检测（来自 [pbakaus/impeccable](https://github.com/pbakaus/impeccable)，v3.9.1） | 设计、重构、评审或打磨任何前端 UI，尤其要摆脱"一眼 AI 生成"的平庸感、或做 a11y/性能/响应式审计时 |
 | [improve-animations](skills/design/improve-animations/) | 整个仓库动效代码的只读审计器：按八类逐条挑问题并回原位复核，排成优先级表让你挑，再把选中的各写成一份计划文件——精确到文件行号、目标 cubic-bezier、时长、验收怎么看，交给别的 agent（哪怕便宜模型）照着改；自己一行源码都不动（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 接手一个 Web 项目觉得「动起来不对劲」、想系统过一遍并排出先改哪个时；或想把判断和改代码拆开。只审一个 diff 用 review-animations。⚠️ 它会在仓库根建 `plans/` 写文件，有推送闸门的项目先决定这目录进不进版本控制 |
-| [industrial-brutalist-ui](skills/design/industrial-brutalist-ui/) | 工业粗野主义 UI：瑞士印刷+军用终端美学，硬网格、巨型字体、单一红色点缀、CRT 做旧 | 数据密集仪表盘、作品集、编辑类网页想要机密蓝图/机械终端质感时 |
-| [minimalist-ui](skills/design/minimalist-ui/) | 极简编辑风 UI：暖色单色调+衬线大标题+bento 网格+微妙动效，禁渐变重阴影 | 想要 Notion 式高级极简文档风、避免 SaaS 模板感时 |
 | [pick-ui-library](skills/design/pick-ui-library/) | 19 条「前端任务 → 用哪个库」的钦定对照表（toast 用 Sonner、拖拽用 dnd kit、长列表用 Virtuoso、状态用 zustand…），只给一个答案不列菜单，另附 6 条「你正在手搓一个已有库解决的问题」自查；仅覆盖 React Web（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 在 React 前端项目里要新引入一个 UI 依赖、懒得自己比选时。需显式点名。⚠️ 表里只给官网不给包名，两处会装错：Base UI 的包是 `@base-ui-components/react`（裸 `base-ui` 是停更的无关包）、Virtuoso 是 `react-virtuoso` |
 | [prototype](skills/design/prototype/) | 把你描述的一个 UI 组件做成 3~5 个方向真不一样的可用版本（换配色换文案不算，必须是布局、密度、性格或交互模型上的不同答案，且每个都能真的点、真的动），全挂在同一个底部切换条上按数字键实时翻看对比；候选全程待在隔离目录碰不到生产代码，选中哪个才写进去（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 手上是一个具体的小东西（toast、价格卡、某个按钮）拿不准该做成什么样，想先并排看几个真不一样的方案再拍板时；只能显式点名，仅限 Web。⚠️ 定稿后它会自删整个原型目录 |
-| [redesign-existing-projects](skills/design/redesign-existing-projects/) | 对现有网站/应用做设计审计并升级到高端质感，不破坏功能 | 给已有前端项目做视觉翻新、去 AI 味时 |
 | [review-animations](skills/design/review-animations/) | 动画代码严审：十条不可妥协标准（缓动、时长 300ms 内、GPU 属性、可中断性、reduced-motion 等）挑刺式审查，输出 Before/After 表和 Block/Approve 裁决（来自 [emilkowalski/skills](https://github.com/emilkowalski/skills)） | 对 CSS transition/keyframes/Framer Motion 等动效代码做高标准 craft review 时。需显式点名（frontmatter 带 `disable-model-invocation`） |
-| [stitch-design-taste](skills/design/stitch-design-taste/) | 为 Google Stitch 生成 DESIGN.md 设计规范，强制高级反俗套 UI 风格 | 用 Google Stitch 生成界面前，需要统一设计品味约束时 |
 
-### frontend — 前端工程（2 个）
+### frontend — 前端工程（1 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
 | [design-loop](skills/frontend/design-loop/) | ⚙️CC "接力棒"文件驱动的自治循环建站：每轮读任务、生成一页 HTML/Tailwind、集成导航、视觉校验，再写入下一任务直到全站完成（来自 [jezweb/claude-skills](https://github.com/jezweb/claude-skills)） | 需要自动连续生成多页完整网站（"把整站建完"、"design loop"）时 |
-| [image-to-code](skills/frontend/image-to-code/) | 图生代码工作流：先自生成分节设计图、深度提取设计系统，再忠实实现前端 | 视觉品质要求高的落地页/官网开发或改版，强制"先出图、再分析、后写码"时 |
 
 ### ios — iOS 开发（2 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
-| [ios-verify-loop](skills/ios/ios-verify-loop/) | iOS 开发-验证闭环：先查工具链反「我本地验不了」→ 按层取证（编译 / 本地同镜像服务 / 模拟器点击驱动 AXe / 手势探针 / 接口正负边界样本 / 只读 SQL 对账）→ 双轨审查兜住自验漏网 → 按规格报证据，含 20+ 条实测踩坑（自写） | 改完 iOS 代码要自己拿到证据再交付、做全 App 逐屏 UI 审计、不想把验证甩给人时 |
+| [zephyr-ios-verify-loop](skills/ios/zephyr-ios-verify-loop/) | iOS 开发-验证闭环：先查工具链反「我本地验不了」→ 按层取证（编译 / 本地同镜像服务 / 模拟器点击驱动 AXe / 手势探针 / 接口正负边界样本 / 只读 SQL 对账）→ 双轨审查兜住自验漏网 → 按规格报证据，含 20+ 条实测踩坑（自写） | 改完 iOS 代码要自己拿到证据再交付、做全 App 逐屏 UI 审计、不想把验证甩给人时 |
 | [swiftui-design-principles](skills/ios/swiftui-design-principles/) | SwiftUI/WidgetKit 原生设计规范：间距网格、字体层级、语义色、原生组件（作者 arjitj2，MIT） | 写或改 SwiftUI 视图、iOS 小组件等原生 Apple UI 时 |
 
 ### writing — 写作（1 个）
@@ -410,19 +398,18 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 |---|---|---|
 | [humanizer](skills/writing/humanizer/) | ⚙️CC 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
-### general — 通用（9 个）
+### general — 通用（8 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
-| [background-watch](skills/general/background-watch/) | ⚙️CC 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
-| [coding-standards](skills/general/coding-standards/) | 编码与工程标准：不为写而写 / 融入现有代码、结构三清晰（目录/结构/模块）、设计与实现纪律（可读性、错误处理、日志、性能）、留痕文档、依赖选型四看、环境隔离与可回滚，含交付前自检清单（自写） | 写代码、改代码、做架构设计、选第三方库、配环境或准备交付时 |
-| [quality-discipline](skills/general/quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
-| [secrets-hygiene](skills/general/secrets-hygiene/) | 本机凭据治理：按「谁能读到」分层归位（第 0 层根本不存 → keychain → 600+按需加载 → 系统标准位 → 永不全局 export）、登记册要能机器对账、`withkey` 按需加载器；退役前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单（`ssh-keygen -p` 非 TTY 下静默设空口令还照报成功等）。**不带脚本**：给扫描位置表、「只吐键名不吐值」的命令写法与加载器参考实现，让用户写进自己的环境（自写） | 整理/审计本机密钥、判断某 token 还能不能删、给新机器配凭据、或新增一份凭据要决定放哪时 |
-| [full-output-enforcement](skills/general/full-output-enforcement/) | 强制输出完整无删节内容：禁止占位符/省略模式，超长时分段续写 | 要求生成完整代码文件、不能出现 `// ...` 等省略时 |
-| [multica-collab](skills/general/multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
-| [multica-read](skills/general/multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
-| [workflow-orchestration](skills/general/workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
-| [scaffold-init](skills/general/scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 scaffold-init 脚手架"，一次注入永久生效 |
+| [zephyr-background-watch](skills/general/zephyr-background-watch/) | ⚙️CC 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
+| [zephyr-coding-standards](skills/general/zephyr-coding-standards/) | 编码与工程标准：不为写而写 / 融入现有代码、结构三清晰（目录/结构/模块）、设计与实现纪律（可读性、错误处理、日志、性能）、留痕文档、依赖选型四看、环境隔离与可回滚，含交付前自检清单（自写） | 写代码、改代码、做架构设计、选第三方库、配环境或准备交付时 |
+| [zephyr-quality-discipline](skills/general/zephyr-quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
+| [zephyr-secrets-hygiene](skills/general/zephyr-secrets-hygiene/) | 本机凭据治理：按「谁能读到」分层归位（第 0 层根本不存 → keychain → 600+按需加载 → 系统标准位 → 永不全局 export）、登记册要能机器对账、`withkey` 按需加载器；退役前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单（`ssh-keygen -p` 非 TTY 下静默设空口令还照报成功等）。**不带脚本**：给扫描位置表、「只吐键名不吐值」的命令写法与加载器参考实现，让用户写进自己的环境（自写） | 整理/审计本机密钥、判断某 token 还能不能删、给新机器配凭据、或新增一份凭据要决定放哪时 |
+| [zephyr-multica-collab](skills/general/zephyr-multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
+| [zephyr-multica-read](skills/general/zephyr-multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
+| [zephyr-workflow-orchestration](skills/general/zephyr-workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
+| [zephyr-scaffold-init](skills/general/zephyr-scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 zephyr-scaffold-init 脚手架"，一次注入永久生效 |
 
 ---
 
@@ -454,7 +441,7 @@ plugin - superpowers@claude-plugins-official
 | 装一个新插件 | `catalog/` 建档案 → `install.manifest` 加 `plugin` 行 → README 插件表加一行 →（含 skill 则 GUIDE.md 加路由）→ 跑 install.sh 完成安装 |
 | 跟踪上游的 git skill | `install.manifest` 加 `clone` 行（install.sh 负责 clone 和后续 pull） |
 | 悟出新的经验习惯 | HABITS.md 加一行并按下行发版（git 侧即刻生效，插件订阅者更新后生效） |
-| 自己写新 skill | 从 `templates/skill-template/` 复制起步，写完按"收散装 skill"流程走 |
+| 自己写新 skill | 从 `templates/skill-template/` 复制起步，**命名加 `zephyr-` 前缀**（自写与外部收编的命名区分线），写完按"收散装 skill"流程走 |
 | 改了 GUIDE/HABITS/skill 正文（发版） | bump `.claude-plugin/` 两个 json 里的 version → commit + push，**其余全自动**：GitHub Actions 会校验清单一致性，并对新版本自动打 `v<版本>` 与 `zephyr-skills--v<版本>` 双 tag、生成 Release。git 用户 pull 即生效；插件订阅者 `claude plugin update` 后生效 |
 
 > 嫌手动登记麻烦？把这些动作丢给项目里的 AI 助手做——它会按[操作手册](#给-ai-助手的操作手册)执行。
@@ -474,7 +461,7 @@ plugin - superpowers@claude-plugins-official
 
 **我想拿去自用，要改哪些地方？**
 
-1. 全局搜索替换四个标识符（比逐处枚举更不容易漏）：`zephyr4123`（GitHub 用户名）、`skills-Scaffolding`（仓库名）、`zephyr-skills`（插件名）、`skills-scaffolding`（市场名）——覆盖 README、`.claude-plugin/` 两个 json、`skills/general/scaffold-init/SKILL.md`
+1. 全局搜索替换四个标识符（比逐处枚举更不容易漏）：`zephyr4123`（GitHub 用户名）、`skills-Scaffolding`（仓库名）、`zephyr-skills`（插件名）、`skills-scaffolding`（市场名）——覆盖 README、`.claude-plugin/` 两个 json、`skills/general/zephyr-scaffold-init/SKILL.md`
 2. `HABITS.md` 全文换成你自己的习惯（这是"主人的偏好"，不是通用最佳实践）
 3. `GUIDE.md` 和 `skills/` 按你的库存增删
 
@@ -485,13 +472,13 @@ plugin - superpowers@claude-plugins-official
 因为它对本仓库这种用法根本不生效。Claude Code 展开 `@path` 时要求路径解析出的真实位置落在项目根之内，指向仓库（永远在项目外）的 import 一律**静默丢弃**；符号链接会被跟随，但跟过去还在项目外，照样被拦。所以改成"入口文件本身是符号链接"——`CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件而非 include，不受这道闸限制，同时保住单一来源。详见[三条设计决策](#设计)第 2 条。
 
 **`CLAUDE.local.md` 会影响协作者吗？**
-不会，它压根不该进 git。`CLAUDE.local.md` 是 Claude Code 约定的本机私有 memory 文件，且这里是本机绝对路径的符号链接，和 `AGENTS.md` 一起 gitignore 即可。协作者要用，自己说一句"安装 scaffold-init 脚手架"就有了。项目自己的 `CLAUDE.md` 照常提交，不受影响。
+不会，它压根不该进 git。`CLAUDE.local.md` 是 Claude Code 约定的本机私有 memory 文件，且这里是本机绝对路径的符号链接，和 `AGENTS.md` 一起 gitignore 即可。协作者要用，自己说一句"安装 zephyr-scaffold-init 脚手架"就有了。项目自己的 `CLAUDE.md` 照常提交，不受影响。
 
 **这个仓库本身什么许可？**
-自有内容（脚本、GUIDE/HABITS、scaffold-init、文档）为 MIT，见根目录 [LICENSE](LICENSE)；`skills/` 下收编的第三方 skill 沿用各自目录内的 LICENSE，与根许可无关。
+自有内容（脚本、GUIDE/HABITS、zephyr-scaffold-init、文档）为 MIT，见根目录 [LICENSE](LICENSE)；`skills/` 下收编的第三方 skill 沿用各自目录内的 LICENSE，与根许可无关。
 
 **收编的第三方 skill 的版权？**
-能溯源的都保留了原 LICENSE 并在索引表标注出处（emilkowalski/skills、pbakaus/impeccable、jezweb/claude-skills、blader/humanizer、anthropics/skills、arjitj2）；其余多为社区流传的散装 skill，收集时来源已不可考。若你是某个 skill 的作者：愿意署名请提 issue 补出处，不希望被收录提 issue 即删。
+能溯源的都保留了原 LICENSE 并在索引表标注出处（emilkowalski/skills、pbakaus/impeccable、jezweb/claude-skills、blader/humanizer、anthropics/skills、arjitj2）；来源不可考的社区散装收编已于 2.0.0 全部清退，现存 skill 非外部收编（有出处）即自写（标「自写」，`zephyr-` 前缀）。若你是某个 skill 的作者：愿意署名请提 issue 补出处，不希望被收录提 issue 即删。
 
 **install.sh 会覆盖我机器上已有的同名 skill 吗？**
 不会。已存在的**真实目录**一律跳过（只提示）；只有符号链接会被刷新指向仓库。
