@@ -5,7 +5,7 @@
 - skill 根：Claude Code 在 `~/.claude/skills`，Codex 在 `~/.agents/skills`（插件模式下由插件直接注册，无需这两个目录）
 - 标 **⚙️CC** 的 skill **只能在 Claude Code 上跑**（依赖该引擎专有能力或写死了 `.claude/` 路径），在 Codex 上别调；其余两个引擎通用
 - 每个 skill 的 frontmatter 里 `engines:` 字段是权威判据
-- 定位仓库：`readlink` 本项目的 `.claude/skills-guide.md`（或 `AGENTS.md`）拿到目标路径，上溯一级即仓库根
+- 定位仓库：`readlink` 本项目的 `CLAUDE.local.md`（或 `AGENTS.md`）拿到目标路径——它指向 `<仓库>/scaffold/AGENTS.md`，上溯两级即仓库根
 
 ## 场景路由
 

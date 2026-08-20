@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# 生成 scaffold/AGENTS.md —— Codex 侧的会话注入入口。
+# 生成 scaffold/AGENTS.md —— 两个引擎共用的会话注入入口。
 #
 # 为什么需要这个文件：
-#   Claude Code 的 CLAUDE.md 支持 @import，可以一次引两份（GUIDE + HABITS）；
-#   Codex 没有 loader 级 import，且每级目录**最多只读一份**指令文件。
-#   所以 Codex 侧需要一份把两者拼好的产物，项目里的 AGENTS.md 符号链接指向它。
+#   两侧都是「项目里的入口文件本身做成符号链接、指向本文件」——
+#   Claude Code 用 CLAUDE.local.md，Codex 用 AGENTS.md。
+#   入口文件只有一个，所以需要一份把 GUIDE + HABITS 拼好的产物。
+#   （文件名沿用 AGENTS.md 是历史原因，内容是引擎中立的。）
+#
+#   注意：不要改回 Claude 侧用 CLAUDE.md + @import 的老写法。
+#   @import 要求路径解析出的真实位置在项目根之内，指向本仓库的一律静默丢弃，
+#   符号链接跟随了也没用——2026-08-20 实测，详见 README「三条设计决策」第 2 条。
 #
 # 单一来源不变：手改的永远只有 scaffold/GUIDE.md 与 scaffold/HABITS.md，
 # 本文件是纯派生产物，由 CI 校验是否与源同步（scripts/build-agents-md.sh --check）。

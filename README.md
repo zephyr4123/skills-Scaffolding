@@ -144,10 +144,10 @@ bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claud
 
 | 引擎 | 注入方式 |
 |---|---|
-| Claude Code | 项目内建符号链接 `.claude/skills-guide.md` / `.claude/habits.md`，`CLAUDE.md` 里写相对路径 `@import` |
-| Codex | 项目根的 `AGENTS.md` **本身**做成符号链接，指向 `scaffold/AGENTS.md`（GUIDE+HABITS 的合并产物） |
+| Claude Code | 项目根的 `CLAUDE.local.md` **本身**做成符号链接，指向 `scaffold/AGENTS.md`（GUIDE+HABITS 的合并产物） |
+| Codex | 项目根的 `AGENTS.md` **本身**做成符号链接，指向同一个文件 |
 
-两种方式都不复制内容——仓库里改一行，所有已注入项目下次会话自动跟进。两个入口可安全并存：**Codex 默认不读 `CLAUDE.md`**，不会重复注入。
+两侧同一套机制、同一个目标文件，都不复制内容——仓库里改一行，所有已注入项目下次会话自动跟进。项目自己的 `CLAUDE.md` 不受影响（与 `CLAUDE.local.md` 同时加载）。两个入口可安全并存：**Codex 默认不读 `CLAUDE.md` / `CLAUDE.local.md`**，不会重复注入。
 
 > 前提：这台机器跑过一次上面的安装命令（否则模型还不认识 scaffold-init 这个 skill）。
 
@@ -206,7 +206,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | **可用 skill** | ✅ 35 个 | ✅ 30 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
-| **项目级注入** | ✅ `CLAUDE.md` + `@import` 符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.md`**，不会重复注入 |
+| **项目级注入** | ✅ `CLAUDE.local.md` **本身**是符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.local.md`**，不会重复注入 |
 | **单一来源** | ✅ 仓库改一行，全机器全项目跟进 | ✅ 同左 | ✅ 同左 |
 
 ### ⚠️ Codex 的一个必知差异：hook 信任门槛
@@ -293,19 +293,19 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 └──────────────┬───────────────────────────────────────────┘
                │ scaffold-init skill（说"安装 scaffold-init 脚手架"触发）
 ┌─ 项目层 ──────▼───────────────────────────────────────────┐
-│  <项目>/.claude/skills-guide.md ──链接──▶ 仓库/scaffold/GUIDE.md  │
-│  <项目>/.claude/habits.md       ──链接──▶ 仓库/scaffold/HABITS.md │
-│  <项目>/CLAUDE.md 末尾:  @.claude/skills-guide.md            │
-│                          @.claude/habits.md                  │
-│  → 每次会话自动把两份内容内联进上下文                        │
+│  <项目>/CLAUDE.local.md ──链接──▶ 仓库/scaffold/AGENTS.md      │
+│  <项目>/AGENTS.md       ──链接──▶ 仓库/scaffold/AGENTS.md      │
+│  → 每次会话自动把 GUIDE + HABITS 读进上下文                   │
+│  （项目自己的 CLAUDE.md 照常并存，不受影响）                  │
 └───────────────────────────────────────────────────────────┘
 ```
 
 三条设计决策，也是踩坑后的实测结论：
 
 1. **全程符号链接，不复制内容。** 仓库里改一行 GUIDE/HABITS/skill 正文，所有机器所有项目下次会话自动生效，不存在过期副本。
-2. **项目层必须"先链接进项目、再相对路径 import"。** Claude Code 的 CLAUDE.md `@import` 只内联**项目内相对路径**，指向项目外的路径（`@~/...` 或绝对路径）会被**静默忽略**——但相对路径 import 会跟随符号链接。这是本仓库反复实验得出的行为结论，也是绕开它的最短路径。
-3. **一切可重复执行。** preflight.sh 纯只读；install.sh 与 scaffold-init 幂等（已就位的链接刷新、已装的插件跳过、已注入的 import 行不重加）。任何一步中断了重跑即可，不会产生冗余。
+2. **项目层必须做成"入口文件本身是符号链接"，绝不能用 `@import`。** Claude Code 展开 `CLAUDE.md` 里的 `@path` 时有一道**外部引用闸**：路径解析出的真实位置必须落在项目根**之内**，否则**静默丢弃**——不报错、不提示。符号链接确实会被跟随，但跟过去仍在项目外，照样被拦；`.claude/rules/` 目录同样受这道闸管。唯一不受限的是入口文件本身——`CLAUDE.md` / `CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件，不是 include，链接指向哪儿都读得到。
+   > ⚠️ 这里原先写的是"相对路径 import 会跟随符号链接，这是反复实验得出的结论"——**半对半错，代价惨重**。链接确实被跟随，但跟过去落在项目外照样被拦掉；正是对的那半句让这个错误设计一直没被怀疑。2026-08-20 用 9 组对照实验 + 独立复验定位，此前它已在 9 个项目里**静默空转了一个多月**，每次注入都"看起来成功"。教训：这类机制的失效是无声的，注入完必须让新会话背出内容才算数。
+3. **一切可重复执行。** preflight.sh 纯只读；install.sh 与 scaffold-init 幂等（已就位的链接刷新、已装的插件跳过），且 scaffold-init 会顺手把老写法的残留清掉。任何一步中断了重跑即可，不会产生冗余。
 
 ---
 
@@ -330,7 +330,7 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 硬性规则：
 
 - 本仓库的 commit 信息用中文、**绝不带任何 AI 署名**（HABITS.md「Git」小节的头两条）
-- preflight 通过就不要跑安装；不要把 GUIDE/HABITS 的内容复制进任何项目（必须走符号链接 + 相对 import）
+- preflight 通过就不要跑安装；不要把 GUIDE/HABITS 的内容复制进任何项目（必须走符号链接）；注入完必须让新会话背出内容验证，别只看链接就报完成
 - 修改 `scripts/*.sh` 时注意：bash 3.2（macOS 默认）里变量后紧跟中文全角字符会解析错误，必须写 `${var}中文` 而不是 `$var中文`
 
 ---
@@ -467,7 +467,7 @@ plugin - superpowers@claude-plugins-official
 只用不改 → 插件市场（两条命令、自动更新、hook 全自动注入）；要改内容、收编自己的 skill → git 模式（符号链接直接改，改完 push 就是发布）。同一台机器**只走一条**。
 
 **不小心两种模式都装了会怎样？**
-不会坏，但全都是双份：GUIDE/HABITS 注入两遍（hook 一遍 + CLAUDE.md import 一遍），全部 skill 也双份注册（`zephyr-skills:xxx` 与 `~/.claude/skills/xxx` 各一份），白费上下文还可能造成路由歧义。解法：卸掉一边——插件侧 `claude plugin uninstall zephyr-skills`；git 侧删掉项目 CLAUDE.md 里的 `## Skill 脚手架` 小节、`.claude/` 里的两个链接，以及 `~/.claude/skills` 下指向本仓库的符号链接。
+不会坏，但全都是双份：GUIDE/HABITS 注入两遍（hook 一遍 + 项目入口文件一遍），全部 skill 也双份注册（`zephyr-skills:xxx` 与 `~/.claude/skills/xxx` 各一份），白费上下文还可能造成路由歧义。解法：卸掉一边——插件侧 `claude plugin uninstall zephyr-skills`；git 侧删掉项目根的 `CLAUDE.local.md` / `AGENTS.md` 符号链接，以及 `~/.claude/skills` 下指向本仓库的符号链接。
 
 **插件模式怎么拿到更新？**
 `claude plugin update zephyr-skills` 一条命令更新到最新（市场清单会定期自动刷新，但插件本体更新以这条命令为准）。git 模式则 `git pull` 即全局生效。
@@ -481,11 +481,11 @@ plugin - superpowers@claude-plugins-official
 **为什么全程符号链接而不是复制？**
 单一来源。复制意味着每台机器每个项目一份副本，改一处漏 N 处；链接让"仓库即真相"，`git pull` 就是全局更新。
 
-**为什么项目注入要先建 `.claude/` 内的链接，而不是 CLAUDE.md 直接 `@~/...` 引仓库？**
-实测 Claude Code 只内联项目内相对路径的 `@import`，项目外路径静默忽略；而相对 import 会跟随符号链接——所以"链接进项目 + 相对引用"是唯一既生效又保住单一来源的写法。
+**为什么项目注入不用 CLAUDE.md 的 `@import`？**
+因为它对本仓库这种用法根本不生效。Claude Code 展开 `@path` 时要求路径解析出的真实位置落在项目根之内，指向仓库（永远在项目外）的 import 一律**静默丢弃**；符号链接会被跟随，但跟过去还在项目外，照样被拦。所以改成"入口文件本身是符号链接"——`CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件而非 include，不受这道闸限制，同时保住单一来源。详见[三条设计决策](#设计)第 2 条。
 
-**项目 CLAUDE.md 里的 import 行提交到 git 会影响协作者吗？**
-不会。协作者机器上若没有对应链接，import 会被静默跳过，零副作用；若协作者也装了本脚手架，说一句"安装 scaffold-init 脚手架"就补上链接了。`.claude/skills-guide.md`、`.claude/habits.md` 两个链接本身建议 gitignore（是本机绝对路径）。
+**`CLAUDE.local.md` 会影响协作者吗？**
+不会，它压根不该进 git。`CLAUDE.local.md` 是 Claude Code 约定的本机私有 memory 文件，且这里是本机绝对路径的符号链接，和 `AGENTS.md` 一起 gitignore 即可。协作者要用，自己说一句"安装 scaffold-init 脚手架"就有了。项目自己的 `CLAUDE.md` 照常提交，不受影响。
 
 **这个仓库本身什么许可？**
 自有内容（脚本、GUIDE/HABITS、scaffold-init、文档）为 MIT，见根目录 [LICENSE](LICENSE)；`skills/` 下收编的第三方 skill 沿用各自目录内的 LICENSE，与根许可无关。
