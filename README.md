@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-22-blue)
+![Skills](https://img.shields.io/badge/skills-23-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
@@ -73,11 +73,11 @@ codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
 codex plugin add zephyr-skills@skills-scaffolding
 ```
 
-> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（17 个），Claude 读 `.claude-plugin/plugin.json`（22 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
+> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（18 个），Claude 读 `.claude-plugin/plugin.json`（23 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
 
 **装完你得到什么：**
 
-- Claude Code 上全部 **22** 个 skill、Codex 上 **17** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- Claude Code 上全部 **23** 个 skill、Codex 上 **18** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
@@ -110,8 +110,8 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 | 探测到 | 做什么 |
 |---|---|
-| Claude Code | 22 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 17 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
+| Claude Code | 23 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 18 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
 不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
@@ -203,7 +203,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 22 个 | ✅ 17 个（两条通道都过滤，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 23 个 | ✅ 18 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.local.md` **本身**是符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.local.md`**，不会重复注入 |
@@ -230,8 +230,8 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 | 通道 | 靠什么过滤 | 实测结果 |
 |---|---|---|
-| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 17 个，5 个 Claude-only 一个没链 |
-| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（17 条），Claude 读 `.claude-plugin/plugin.json`（22 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
+| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 18 个，5 个 Claude-only 一个没链 |
+| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（18 条），Claude 读 `.claude-plugin/plugin.json`（23 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
 
 双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
 
@@ -270,7 +270,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 22 ──────▶ 注册进 Claude Code（Codex 17 个）│
+│        ├── skills/ × 23 ──────▶ 注册进 Claude Code（Codex 18 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -343,8 +343,8 @@ skills/           收编的 skill 完整副本，按领域分组（design/fronte
 catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
                   AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
-.claude-plugin/   marketplace.json + plugin.json（22 个 skill）：Claude Code 读这份
-.codex-plugin/    plugin.json（17 个 skill）：Codex 优先读这份，派生产物（勿手改）
+.claude-plugin/   marketplace.json + plugin.json（23 个 skill）：Claude Code 读这份
+.codex-plugin/    plugin.json（18 个 skill）：Codex 优先读这份，派生产物（勿手改）
 .github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
 install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill

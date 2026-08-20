@@ -36,6 +36,7 @@
 - **写码 / 架构 / 选库 / 配环境 / 交付**：`zephyr-coding-standards`（结构三清晰、实现纪律、选型四看、交付自检）
 - **写测试 / 做审查 / 验产出 / 排查问题**：`zephyr-quality-discipline`（测试驱动、CI 门禁、对抗审查、排查三纪律与证据规格）
 - **整理 / 审计本机密钥、判断某 token 能不能删、新机器配凭据**：`zephyr-secrets-hygiene`（按「谁能读到」分层归位、登记册要能机器对账、`withkey` 按需加载器；删之前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单。**纯方法论，不带脚本**——给判断方法与参考实现）
+- **管「外层协作仓 + 多个独立业务代码仓」的拓扑**（定多仓关联方式、初始化/承接 nested 拓扑项目、给外层仓写跨仓 git 运维 CLI）：`zephyr-nested-git`（外层零业务代码只存指针 manifest，代码仓独立 clone 被 .gitignore 挡住各推各的远端；含单文件参考 CLI，红线在代码里——pull 只 ff-only、push 永不 force、fetch 失败不吞、prod 漂移告警）
 - **Multica 工作区操作**（派 issue 给 agent、看板/轨迹/汇报、onboarding、贴 multica.ai URL）：`zephyr-multica-collab`
 - **Multica 记忆读取**（把 workspace 的 issue 网络/结论/轨迹/成本读全读透、只读不写、token 高效）：`zephyr-multica-read`
 - **多 agent Workflow 编排**（有份量的多步工程活，决定何时上编排、选什么形状与范式；长跑 workflow 卡住 / 大批失败 / 放量前评估也走它）：`zephyr-workflow-orchestration` ⚙️CC
