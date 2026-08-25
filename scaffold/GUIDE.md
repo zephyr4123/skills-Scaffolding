@@ -41,6 +41,14 @@
 - **让外部长任务跑完来找你**（外部系统上的任务 / CI / 部署 / 远程队列这类不会主动通知你的活；含「静默≠正常」的哨兵纪律）：`zephyr-background-watch` ⚙️CC（依赖 Monitor 与后台任务）
 - **开发流程纪律**（superpowers 插件：`brainstorming`、`writing-plans`、`systematic-debugging` 等）：**仅在用户点名要求时使用，绝不自主加载**——它很重、时间-收益杠杆低，日常用轻量 skill 小步快跑 + workflow 对抗性审查替代
 
+### MCP 工具（仅 Claude Code 侧有）
+
+- **浏览器自动化 / UI 闭环取证**：`playwright` MCP（导航/点击/快照/截图/网络观测）——zephyr-workflow-orchestration 与 impeccable live 迭代的取证锚点；要用户真实 Chrome 登录态时才用 claude-in-chrome
+- **找图标**：`iconify` MCP（跨图标集语义搜索 + 取 SVG）——**别让模型手绘 SVG 图标**，同一项目尽量只用一个图标集
+- **找免版权配图**：`stock-images` MCP（Pexels/Unsplash/Pixabay 三源）——要真实摄影素材时用，工具不在说明凭据未就位
+- **找网页设计 prompt**：`motionsites` MCP——落地页起稿先找方向；免费额度仅 3 条，省着用，结果里的升级提示如实转告用户
+- 这些工具在 Codex 会话里不存在（按裁决 MCP 暂只做 Claude Code 侧）；缺了先跑仓库 `scripts/preflight.sh` 对账
+
 ## 原则
 
 - 设计类任务：以 `impeccable` 为主导，`frontend-design` 等审美类做叠加约束，不要同时开多个主导

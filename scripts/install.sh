@@ -2,10 +2,13 @@
 # 一键恢复全部 skill（可重复执行，已就位的自动跳过）。
 # 同时支持 Claude Code 与 Codex —— 只装机器上真正存在的那些引擎。
 #
-#   1/4 skills/ 收编副本   → 符号链接进各引擎的 skill 根
-#   2/4 manifest 的 clone 行 → git clone 一份，再链接进各引擎的 skill 根
-#   3/4 manifest 的 plugin 行 → <引擎> plugin marketplace add + install
-#   4/4 生成 scaffold/AGENTS.md（Codex 侧注入入口）
+#   1/5 skills/ 收编副本   → 符号链接进各引擎的 skill 根
+#   2/5 manifest 的 clone 行 → git clone 一份，再链接进各引擎的 skill 根
+#   3/5 manifest 的 plugin 行 → <引擎> plugin marketplace add + install
+#   4/5 生成 scaffold/AGENTS.md（Codex 侧注入入口）
+#   5/5 mcp/registry.json 的 server → claude mcp add-json 注入 user scope
+#       （按裁决仅 Claude Code 侧；幂等，已配置的跳过；凭据 fail-closed，
+#         env_required 里的键当前环境缺任何一个就不注入，绝不写入空凭据）
 #
 # 每个 skill 的 frontmatter 可声明 `engines:`（缺省视为两个引擎都支持）：
 #   engines: [claude-code, codex]   两边都链
@@ -72,7 +75,7 @@ link_one() {  # $1=源目录 $2=目标根 $3=计数用引擎名
   esac
 }
 
-echo "== 1/4 链接收编 skill =="
+echo "== 1/5 链接收编 skill =="
 [ "$HAS_CLAUDE" -eq 1 ] && mkdir -p "$CLAUDE_ROOT"
 [ "$HAS_CODEX" -eq 1 ]  && mkdir -p "$CODEX_ROOT"
 for skill in "$REPO_DIR"/skills/*/*/; do
@@ -88,7 +91,7 @@ for skill in "$REPO_DIR"/skills/*/*/; do
   fi
 done
 
-echo "== 2/4 克隆 git 来源 skill =="
+echo "== 2/5 克隆 git 来源 skill =="
 # 只 clone 一份（放主引擎的根），另一个引擎用符号链接指过去，避免同一仓库克隆两遍。
 if [ "$HAS_CLAUDE" -eq 1 ]; then PRIMARY="$CLAUDE_ROOT"; else PRIMARY="$CODEX_ROOT"; fi
 while read -r _ url name; do
@@ -110,7 +113,7 @@ while read -r _ url name; do
   fi
 done < <(grep -E '^clone[[:space:]]' "$MANIFEST" 2>/dev/null || true)
 
-echo "== 3/4 安装第三方插件 =="
+echo "== 3/5 安装第三方插件 =="
 # Claude Code:  claude plugin marketplace add / claude plugin install
 # Codex:        codex  plugin marketplace add / codex  plugin add
 # 实测：Codex 原生读 .claude-plugin/marketplace.json 与 plugin.json，所以同一份清单两边通用。
@@ -165,11 +168,59 @@ install_plugins() {  # $1=引擎名(claude|codex) $2=安装子命令(install|add
 [ "$HAS_CLAUDE" -eq 1 ] && install_plugins claude install claude-code
 [ "$HAS_CODEX" -eq 1 ]  && install_plugins codex  add    codex
 
-echo "== 4/4 生成 Codex 注入入口 =="
+echo "== 4/5 生成 Codex 注入入口 =="
 if bash "${REPO_DIR}/scripts/build-agents-md.sh" >/dev/null 2>&1; then
   echo "  scaffold/AGENTS.md 已就位"
 else
   echo "  [失败] scaffold/AGENTS.md 生成失败"; FAIL=1
+fi
+
+echo "== 5/5 注入 MCP server（仅 Claude Code，来源 mcp/registry.json）=="
+MCP_OK=0; MCP_ADD=0; MCP_SKIP=0
+if [ "$HAS_CLAUDE" -eq 1 ] && command -v claude >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
+  # python 只做判定并逐行吐 <动作>TAB<名字>TAB<载荷>，注入动作由 bash 调 claude CLI 执行。
+  # 凭据红线：env_required 的键要求已在当前环境（如经 keychain 按需加载）就位，
+  # 缺任何一个就 SKIP——宁可不注入，绝不写入空凭据让 server 带病上线。
+  while IFS=$'\t' read -r act name payload; do
+    [ -z "${act:-}" ] && continue
+    case "$act" in
+      OK)   echo "  已配置 ${name}，跳过"; MCP_OK=$((MCP_OK+1)) ;;
+      SKIP) echo "  [缺凭据] ${name} 需要 ${payload}，本次不注入；键就位后重跑本脚本"; MCP_SKIP=$((MCP_SKIP+1)) ;;
+      ADD)
+        if claude mcp add-json "$name" "$payload" --scope user >/dev/null 2>&1; then
+          echo "  [claude] 已注入 ${name}"; MCP_ADD=$((MCP_ADD+1))
+        else
+          echo "  [失败] ${name} 注入失败（claude mcp add-json 报错）"; FAIL=1
+        fi ;;
+    esac
+  done < <(REPO_DIR="$REPO_DIR" python3 - <<'PY'
+import json, os
+reg = json.load(open(os.path.join(os.environ['REPO_DIR'], 'mcp', 'registry.json')))
+try:
+    existing = json.load(open(os.path.expanduser('~/.claude.json'))).get('mcpServers', {})
+except Exception:
+    existing = {}
+for s in reg.get('servers', []):
+    if 'claude-code' not in s.get('engines', []):
+        continue
+    name = s['name']
+    if name in existing:
+        print('OK\t' + name + '\t-'); continue
+    missing = [k for k in s.get('env_required', []) if not os.environ.get(k)]
+    if missing:
+        print('SKIP\t' + name + '\t' + ' / '.join(missing)); continue
+    cfg = json.loads(json.dumps(s['config']).replace('${HOME}', os.environ['HOME']))
+    if s.get('env_required'):
+        cfg.setdefault('env', {}).update({k: os.environ[k] for k in s['env_required']})
+    print('ADD\t' + name + '\t' + json.dumps(cfg, ensure_ascii=False))
+PY
+)
+else
+  if [ "$HAS_CLAUDE" -eq 1 ]; then
+    echo "  [跳过] claude CLI 或 python3 不可用，MCP 未处理"
+  else
+    echo "  [跳过] 本机无 Claude Code（按裁决 Codex 侧暂不做 MCP）"
+  fi
 fi
 
 echo
@@ -178,6 +229,7 @@ echo
 echo "── 本次结果 ──"
 [ "$HAS_CLAUDE" -eq 1 ] && echo "  Claude Code：${LINKED_CLAUDE} 个 skill 已链接进 ${CLAUDE_ROOT}"
 [ "$HAS_CODEX" -eq 1 ]  && echo "  Codex：      ${LINKED_CODEX} 个 skill 已链接进 ${CODEX_ROOT}"
+[ "$HAS_CLAUDE" -eq 1 ] && echo "  MCP（Claude）：${MCP_OK} 已配置 / ${MCP_ADD} 新注入 / ${MCP_SKIP} 缺凭据跳过"
 if [ "$FAIL" -ne 0 ]; then
   echo
   echo "⚠️ 有失败项（见上方 [失败] 标记），但**上面列出的 skill 已经可用**。"

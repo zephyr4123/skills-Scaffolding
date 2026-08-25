@@ -33,6 +33,7 @@
 - [给 AI 助手的操作手册](#给-ai-助手的操作手册)
 - [仓库结构](#仓库结构)
 - [Skill 总索引](#收编的-skillskills)
+- [MCP 总索引](#收编的-mcpmcp)
 - [install.manifest 格式](#installmanifest-格式)
 - [维护手册](#维护手册)
 - [Fork 指南与 FAQ](#fork-指南与-faq)
@@ -323,6 +324,7 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 | 恢复/检查环境（仅 git 模式） | 先 `bash <仓库>/scripts/preflight.sh`（只读，退出码 0=完整 1=有缺口）；**仅当有缺口时**才 `bash <仓库>/scripts/install.sh` |
 | 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径、跑 `bash scripts/build-codex-manifest.sh` 重新生成 Codex 侧清单（CI 会校验同步），最后跑一次 install.sh 让链接生效 |
 | 新增一个三方插件 | `catalog/` 建档案（来源、安装命令、skill 清单），`install.manifest` 加一行 `plugin`，README 插件表加一行，插件含 skill 则 GUIDE.md 路由加一条，最后跑一次 install.sh 完成安装 |
+| 收编一个新 MCP | `mcp/registry.json` 加条目（配置里家目录写 `${HOME}` 占位；凭据只记 `env_required` 键名，值永不入库），`catalog/mcp-<name>.md` 建档案，README MCP 表加一行，GUIDE.md「MCP 工具」加路由，跑 install.sh 注入，按发版流程发版 |
 | 记录新的经验习惯 | 在 HABITS.md 对应小节加一行，无需其他动作（所有已注入项目自动继承） |
 | "这个项目别用这套习惯/skill"（插件模式） | `claude plugin disable zephyr-skills --scope project`，只影响当前项目 |
 | 更新脚手架到最新 | 插件模式 `claude plugin update zephyr-skills`；git 模式在仓库里 `git pull`，符号链接自动生效 |
@@ -340,7 +342,9 @@ git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试�
 ```
 skills/           收编的 skill 完整副本，按领域分组（design/frontend/ios/writing/general）
                   每个 SKILL.md 的 frontmatter 用 engines: 声明适用引擎，是全仓的过滤真相源
-catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
+catalog/          第三方插件与 MCP 档案：本体由上游管理，这里记来源、装法、用途、坑
+mcp/              MCP server 登记册（registry.json，单一来源）：配置 + 凭据键名（值永不入库）
+                  install.sh 据此幂等注入 Claude Code user scope，preflight.sh 只读对账
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
                   AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
 .claude-plugin/   marketplace.json + plugin.json（24 个 skill）：Claude Code 读这份
@@ -415,6 +419,25 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 
 ---
 
+## 收编的 MCP（mcp/）
+
+> **裁决（2026-08-25）：MCP 暂只做 Claude Code 侧**（注入 user scope），Codex 侧暂不管——这是范围裁决不是能力结论，registry 的 `engines` 字段已为将来扩 Codex 留位。
+
+机制与 skill 收编同构，但收编单位不同——**MCP 收编的是「配置 + 档案」，不是内容副本**（server 本体活在 npm / 上游服务里）：
+
+- **单一来源**：手改的只有 `mcp/registry.json`（配置模板 + `env_required` 凭据键名）；install.sh 据此 `claude mcp add-json --scope user` 幂等注入（已配置的跳过、不覆盖），preflight.sh 只读对账
+- **凭据红线**：registry 只登记键名，**值永不入库**；install.sh 仅在当前环境能解析出全部键时才注入（fail-closed），缺则跳过并提示——取值方式见 zephyr-secrets-hygiene
+- **少而精纪律**：MCP 的 tool 定义常驻吃上下文，user 档只放高频通用的；重的 / 项目特定的以后走 project 档
+
+| MCP | 是干啥的 | 凭据 | 档案 |
+|---|---|---|---|
+| **playwright** | 浏览器自动化（微软官方）：导航/点击/快照/截图/网络观测，UI 闭环校验锚点 | 无 | [查看](catalog/mcp-playwright.md) |
+| **iconify** | 跨图标集语义搜索 + 取 SVG（200+ 图标集），别让模型手绘图标 | 无 | [查看](catalog/mcp-iconify.md) |
+| **stock-images** | 免版权配图三源聚合（Pexels/Unsplash/Pixabay）检索下载 | 3 把 API key（只记键名） | [查看](catalog/mcp-stock-images.md) |
+| **motionsites** | 网页设计 prompt 库（http 型）：免费额度 3 条，premium 需订阅 | 无（额度服务端管） | [查看](catalog/mcp-motionsites.md) |
+
+---
+
 ## install.manifest 格式
 
 一行一条，空格分隔，`#` 开头是注释：
@@ -441,6 +464,7 @@ plugin - superpowers@claude-plugins-official
 |---|---|
 | 收一个散装 skill | 副本放进 `skills/<领域>/` → README 索引加一行 → GUIDE.md 路由加一条 → plugin.json `skills` 数组加一条 → README 徽章与分组计数同步 → 跑 install.sh → 按下行发版 |
 | 装一个新插件 | `catalog/` 建档案 → `install.manifest` 加 `plugin` 行 → README 插件表加一行 →（含 skill 则 GUIDE.md 加路由）→ 跑 install.sh 完成安装 |
+| 收一个好用的 MCP | `mcp/registry.json` 加条（凭据只记键名）→ `catalog/mcp-<name>.md` 档案 → README MCP 表 + GUIDE 路由各一行 → 跑 install.sh → 按下行发版 |
 | 跟踪上游的 git skill | `install.manifest` 加 `clone` 行（install.sh 负责 clone 和后续 pull） |
 | 悟出新的经验习惯 | HABITS.md 加一行并按下行发版（git 侧即刻生效，插件订阅者更新后生效） |
 | 自己写新 skill | 从 `templates/skill-template/` 复制起步，**命名加 `zephyr-` 前缀**（自写与外部收编的命名区分线），写完按"收散装 skill"流程走 |

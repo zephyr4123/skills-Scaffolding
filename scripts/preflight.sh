@@ -100,6 +100,39 @@ check_plugins() {  # $1=cli
 [ "$HAS_CLAUDE" -eq 1 ] && check_plugins claude
 [ "$HAS_CODEX" -eq 1 ]  && check_plugins codex
 
+# MCP 对账（按裁决仅 Claude Code 侧）：registry 声明的 vs ~/.claude.json 实配的，只读不改
+if [ "$HAS_CLAUDE" -eq 1 ]; then
+  echo "== MCP server · claude（来源 mcp/registry.json）=="
+  if [ -f "${REPO_DIR}/mcp/registry.json" ] && command -v python3 >/dev/null 2>&1; then
+    if ! REPO_DIR="$REPO_DIR" python3 - <<'PY'
+import json, os, sys
+reg = json.load(open(os.path.join(os.environ['REPO_DIR'], 'mcp', 'registry.json')))
+try:
+    existing = json.load(open(os.path.expanduser('~/.claude.json'))).get('mcpServers', {})
+except Exception:
+    existing = {}
+total = ok = 0
+for s in reg.get('servers', []):
+    if 'claude-code' not in s.get('engines', []):
+        continue
+    total += 1
+    if s['name'] in existing:
+        ok += 1
+    else:
+        need = ('（需先备好凭据 ' + ' / '.join(s['env_required']) + '）') if s.get('env_required') else ''
+        print('  [缺] ' + s['name'] + need)
+print('  ' + str(ok) + '/' + str(total) + ' 已注入')
+sys.exit(0 if ok == total else 1)
+PY
+    then
+      MISSING=1
+    fi
+  else
+    echo "  registry 或 python3 不可用，MCP 状态未知"
+    MISSING=1
+  fi
+fi
+
 if [ "$HAS_CODEX" -eq 1 ]; then
   echo "== Codex 注入入口 =="
   if bash "${REPO_DIR}/scripts/build-agents-md.sh" --check >/dev/null 2>&1; then

@@ -1,0 +1,67 @@
+{
+  "_readme": [
+    "收编 MCP server 的单一来源登记册。手改的永远只有这一份，install.sh 据此幂等注入引擎配置。",
+    "裁决（2026-08-25）：MCP 暂只做 Claude Code 侧（注入 user scope，即 ~/.claude.json 的 mcpServers）；",
+    "Codex 侧暂不管——是范围裁决，不是能力结论。engines 字段先留着，将来扩 Codex 时同一份登记册直接复用。",
+    "凭据红线：env 的值永不入库。需要凭据的 server 用 env_required 声明键名，install.sh 只在当前环境",
+    "能解析出全部键时才注入（fail-closed，缺一个就跳过并提示），preflight.sh 负责对账报缺。",
+    "config 里的 ${HOME} 是模板占位符，注入时展开为本机家目录。",
+    "每个 server 的档案（干什么的、tools 清单、坑）在 catalog/mcp-<name>.md。"
+  ],
+  "servers": [
+    {
+      "name": "playwright",
+      "summary": "浏览器自动化（Microsoft 官方 @playwright/mcp）：导航/点击/截图/快照/网络观测，UI 闭环校验的锚点",
+      "engines": ["claude-code"],
+      "scope": "user",
+      "catalog": "catalog/mcp-playwright.md",
+      "env_required": [],
+      "config": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["@playwright/mcp@latest", "--browser", "chrome", "--user-data-dir", "${HOME}/.config/playwright-profile", "--timeout-action", "15000"],
+        "env": {}
+      }
+    },
+    {
+      "name": "motionsites",
+      "summary": "MotionSites 设计 prompt 库（http 型）：检索/取用高质量网页设计 prompt，免费档限 3 条，premium 需订阅",
+      "engines": ["claude-code"],
+      "scope": "user",
+      "catalog": "catalog/mcp-motionsites.md",
+      "env_required": [],
+      "config": {
+        "type": "http",
+        "url": "https://xgdzyqfalbibzelpdpvr.supabase.co/functions/v1/mcp"
+      }
+    },
+    {
+      "name": "iconify",
+      "summary": "Iconify 图标检索：跨图标集搜索、取单个图标 SVG、查图标集详情",
+      "engines": ["claude-code"],
+      "scope": "user",
+      "catalog": "catalog/mcp-iconify.md",
+      "env_required": [],
+      "config": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "iconify-mcp-server@latest"],
+        "env": {}
+      }
+    },
+    {
+      "name": "stock-images",
+      "summary": "免版权图库检索下载（Pexels / Unsplash / Pixabay 三源），需三把 API key",
+      "engines": ["claude-code"],
+      "scope": "user",
+      "catalog": "catalog/mcp-stock-images.md",
+      "env_required": ["PEXELS_API_KEY", "UNSPLASH_API_KEY", "PIXABAY_API_KEY"],
+      "config": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["-y", "stock-images-mcp"],
+        "env": {}
+      }
+    }
+  ]
+}
