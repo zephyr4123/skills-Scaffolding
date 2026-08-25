@@ -5,7 +5,7 @@
 **个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-23-blue)
+![Skills](https://img.shields.io/badge/skills-24-blue)
 ![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
@@ -73,11 +73,11 @@ codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
 codex plugin add zephyr-skills@skills-scaffolding
 ```
 
-> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（18 个），Claude 读 `.claude-plugin/plugin.json`（23 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
+> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（19 个），Claude 读 `.claude-plugin/plugin.json`（24 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
 
 **装完你得到什么：**
 
-- Claude Code 上全部 **23** 个 skill、Codex 上 **18** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
+- Claude Code 上全部 **24** 个 skill、Codex 上 **19** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
 - **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
 - **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
 
@@ -110,8 +110,8 @@ bash ~/coding/personal/skills-scaffolding/scripts/install.sh
 
 | 探测到 | 做什么 |
 |---|---|
-| Claude Code | 23 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 18 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
+| Claude Code | 24 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
+| Codex | 19 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
 | 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
 
 不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
@@ -203,7 +203,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | | 只用 Claude Code | 只用 Codex | 两个都用 |
 |---|---|---|---|
 | **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 23 个 | ✅ 18 个（两条通道都过滤，见下） | ✅ 各取所需 |
+| **可用 skill** | ✅ 24 个 | ✅ 19 个（两条通道都过滤，见下） | ✅ 各取所需 |
 | **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
 | **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
 | **项目级注入** | ✅ `CLAUDE.local.md` **本身**是符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.local.md`**，不会重复注入 |
@@ -230,8 +230,8 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 | 通道 | 靠什么过滤 | 实测结果 |
 |---|---|---|
-| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 18 个，5 个 Claude-only 一个没链 |
-| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（18 条），Claude 读 `.claude-plugin/plugin.json`（23 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
+| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 19 个，5 个 Claude-only 一个没链 |
+| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（19 条），Claude 读 `.claude-plugin/plugin.json`（24 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
 
 双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
 
@@ -270,7 +270,7 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 │        │  /plugin marketplace add + /plugin install            │
 │        ▼                                                       │
 │  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 23 ──────▶ 注册进 Claude Code（Codex 18 个）│
+│        ├── skills/ × 24 ──────▶ 注册进 Claude Code（Codex 19 个）│
 │        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -343,8 +343,8 @@ skills/           收编的 skill 完整副本，按领域分组（design/fronte
 catalog/          第三方插件档案：本体由插件市场管理，这里记来源、装法、用途、当前可用性
 scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
                   AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
-.claude-plugin/   marketplace.json + plugin.json（23 个 skill）：Claude Code 读这份
-.codex-plugin/    plugin.json（18 个 skill）：Codex 优先读这份，派生产物（勿手改）
+.claude-plugin/   marketplace.json + plugin.json（24 个 skill）：Claude Code 读这份
+.codex-plugin/    plugin.json（19 个 skill）：Codex 优先读这份，派生产物（勿手改）
 .github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
 hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
 install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill
@@ -407,6 +407,7 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 | [zephyr-quality-discipline](skills/general/zephyr-quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
 | [zephyr-secrets-hygiene](skills/general/zephyr-secrets-hygiene/) | 本机凭据治理：按「谁能读到」分层归位（第 0 层根本不存 → keychain → 600+按需加载 → 系统标准位 → 永不全局 export）、登记册要能机器对账、`withkey` 按需加载器；退役前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单（`ssh-keygen -p` 非 TTY 下静默设空口令还照报成功等）。**不带脚本**：给扫描位置表、「只吐键名不吐值」的命令写法与加载器参考实现，让用户写进自己的环境（自写） | 整理/审计本机密钥、判断某 token 还能不能删、给新机器配凭据、或新增一份凭据要决定放哪时 |
 | [zephyr-nested-git](skills/general/zephyr-nested-git/) | 「外层协作仓 + 多个独立业务代码仓」的 nested-git 指针拓扑：外层零业务代码，只存指针 manifest（url/path/prod_branch）与协作产物，代码仓独立 clone 嵌在外层被 .gitignore 挡住、各推各的远端；指针是仓库级不是提交级，用版本关联精度换两层平台/凭据/CI 的彻底解耦。含单文件参考 CLI（红线在代码里：pull 只 ff-only、push 永不 force、fetch 失败不吞、prod_branch 漂移告警）+ 空壳 MR 四道校验 + 运维台通用纪律（dry-run 默认、写操作拒绝 all、凭据不进 argv）（自写） | 新项目要定多仓关联方式（submodule/subtree/合仓/nested 选哪个）、初始化或承接 nested 拓扑项目、给外层仓写跨仓 git 运维 CLI 时 |
+| [zephyr-cloud-cli-ops](skills/general/zephyr-cloud-cli-ops/) | CLI-first 云运维分工协议：控制台是人的界面、API 才是 agent 的界面——人只做付钱 / 开通 / 发密钥三类控制台专属动作，其余（建桶/传件/证书/加速域名/DNS/防盗链/预热/验证）全由 agent 用 CLI+SDK 完成。含开工四步协议（凭据归位→只读验活→摸底→动手）、COS+CDN 静态资产十步全链蓝图（每步带完成判据，附 faststart / 防盗链白名单 / 证书续期台账等配套纪律）、实测陷阱清单（边缘证书铺设窗口期、`--resolve` 指定节点是错误测法、本机 VPN 隧道废掉测速）。方法论跨云，worked example 腾讯云。**不带脚本**（自写） | 要配对象存储 / CDN / 证书 / DNS、静态资产迁上云分发、新云账号想让 agent 接管运维、或线上 CDN 慢 / 握手失败 / 测速反复要排查时 |
 | [zephyr-multica-collab](skills/general/zephyr-multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [zephyr-multica-read](skills/general/zephyr-multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
 | [zephyr-workflow-orchestration](skills/general/zephyr-workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
