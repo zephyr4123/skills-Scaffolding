@@ -86,6 +86,15 @@ class FreshProjectTest(ProjectCase):
         self.assertFalse((self.root / ".claude").exists())
 
 
+class CommandLineTest(ProjectCase):
+    def test_nonexistent_directory_is_refused_without_creating_anything(self):
+        # 真实踩过：shell 没拆开路径列表，拼出一个不存在的路径，脚本在那里建了整棵目录树
+        bogus = self.root / "a b" / "c d"
+        self.assertEqual(ip.main([str(bogus), "--check"]), 1)
+        self.assertEqual(ip.main([str(bogus)]), 1)
+        self.assertFalse((self.root / "a b").exists())
+
+
 class ExistingFilesTest(ProjectCase):
     def test_project_content_is_preserved(self):
         (self.root / "AGENTS.md").write_text("# 项目说明\n\n别动这段。\n", encoding="utf-8")

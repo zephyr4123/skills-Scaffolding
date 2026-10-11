@@ -288,7 +288,12 @@ def main(argv=None) -> int:
     parser.add_argument("--check", action="store_true", help="只读，列出会做的改动，有改动退出码 1")
     args = parser.parse_args(argv)
 
-    root = find_project_root(Path(args.project))
+    start = Path(args.project).expanduser()
+    if not start.is_dir():
+        # 不存在的路径往上找不到项目根，会退回到这个路径本身，接着就在那里建出整棵目录树
+        print(f"✗ 目录不存在：{start}", file=sys.stderr)
+        return 1
+    root = find_project_root(start)
     if root == Path.home().resolve():
         print("当前目录不在任何项目里（向上没找到 .git 或 .memory），不往家目录里装。")
         return 1
