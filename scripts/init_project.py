@@ -94,14 +94,24 @@ def cleanup_legacy(root: Path, apply: bool) -> list[Result]:
                 if apply:
                     write_if_changed(entry, new)
 
-    gitignore = root / ".gitignore"
-    if gitignore.is_file():
-        lines = gitignore.read_text(encoding="utf-8").splitlines(keepends=True)
+    # 老版本让 git 忽略 AGENTS.md（当时它是指向脚手架的链接），写在 .gitignore 或本机的 .git/info/exclude
+    ignore_files = [(".gitignore", root / ".gitignore")]
+    if (root / ".git").exists():
+        # worktree、子模块里 .git 是文件，exclude 的真实位置要问 git
+        out = subprocess.run(["git", "rev-parse", "--git-path", "info/exclude"], cwd=root, capture_output=True, text=True)
+        if out.returncode == 0:
+            ignore_files.append((".git/info/exclude", root / out.stdout.strip()))
+        else:
+            results.append((FAIL, f"找不到 .git/info/exclude，没检查里面的 AGENTS.md：{out.stderr.strip()}"))
+    for label, path in ignore_files:
+        if not path.is_file():
+            continue
+        lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
         kept = [l for l in lines if l.strip() not in ("AGENTS.md", "/AGENTS.md")]
         if kept != lines:
-            results.append((FIX, ".gitignore 去掉 AGENTS.md（红线现在要提交进 git，跟项目走）"))
+            results.append((FIX, f"{label} 去掉 AGENTS.md（红线现在要提交进 git，跟项目走）"))
             if apply:
-                write_if_changed(gitignore, "".join(kept))
+                write_if_changed(path, "".join(kept))
     return results
 
 

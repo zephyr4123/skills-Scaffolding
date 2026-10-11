@@ -206,6 +206,16 @@ class LegacyAndMigrationTest(ProjectCase):
         self.assertNotIn("skills-guide", claude)
         self.assertIn("约定。", claude)
 
+    def test_agents_md_in_git_exclude_is_cleaned(self):
+        # 老版本也会在本机的 .git/info/exclude 里挡住 AGENTS.md，红线会因此进不了 git
+        exclude = self.root / ".git" / "info" / "exclude"
+        exclude.parent.mkdir(exist_ok=True)
+        exclude.write_text("# git 自带的注释\nCLAUDE.local.md\nAGENTS.md\n", encoding="utf-8")
+        self.init()
+        self.assertEqual(exclude.read_text(encoding="utf-8"), "# git 自带的注释\nCLAUDE.local.md\n")
+        ignored = subprocess.run(["git", "check-ignore", "-q", "AGENTS.md"], cwd=self.root)
+        self.assertEqual(ignored.returncode, 1)
+
     def test_foreign_agents_symlink_is_left_alone(self):
         other = Path(self._tmp.name) / "elsewhere.md"
         other.write_text("别人的", encoding="utf-8")
