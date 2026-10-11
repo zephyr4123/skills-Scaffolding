@@ -1,0 +1,5 @@
+- [个人 skill 库总览](skill-library.md) — skill 装在哪、⚙️CC 含义、缺了怎么补
+- [前端 skill 路由](skill-routing-frontend.md) — 网页 UI、动效、手势交互用哪个 skill（impeccable 主导）
+- [iOS skill 路由](skill-routing-ios.md) — SwiftUI 视图、iOS 验证闭环用哪个 skill
+- [通用 skill 路由](skill-routing-general.md) — 密钥、多仓、云运维、Multica、编排、长任务、去 AI 腔用哪个 skill
+- [MCP 工具](mcp-tools.md) — 浏览器、图标、配图、设计 prompt（仅 Claude Code）
