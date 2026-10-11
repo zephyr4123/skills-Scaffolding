@@ -143,6 +143,7 @@ python3 ~/coding/personal/skills-scaffolding/scripts/init_project.py <项目目�
 
 ### Codex 的几个必知差异（codex-cli 0.162.1 实测）
 
+- **原生 memories 为什么关**：`~/.codex/memories/memory_summary.md` 整份注入每个会话，不分项目（公司项目、私人数据、别的仓库混在一起）；内容是「任务组 → 会话摘要」的流水账，到处是绝对路径；由后台两阶段批处理生成，官方原话 "Treat these files as generated state"，人和 agent 都不能当场写
 - **hook 要信任一次**：见[快速开始](#1-每台机器一次装机器层)。没信任时 hook 静默不执行
 - **`.agents/` 在沙盒里只读**：workspace-write 沙盒把 `.git`、`.agents`、`.codex` 设为只读，实测 `mkdir .agents` 返回 `Operation not permitted`——所以记忆目录叫 `.memory/` 而不是 `.agents/memory/`
 - **AGENTS.md 不支持引入其他文件**：`@path` 语法不存在，`project_doc_fallback_filenames` 只接受文件名不接受路径。SessionStart hook 的 `additionalContext` 是唯一能把文件内容确定性放进上下文的官方通道
