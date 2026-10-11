@@ -25,11 +25,5 @@ plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill claude-code
 #   上游哪天补了 marketplace.json，取消下面这行注释即可恢复。
 # plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills claude-code,codex
 
-# superpowers —— 装在 Anthropic 官方市场 claude-plugins-official 上，
-#   该市场是 Claude Code **内建**的（所以来源填 `-`）；Codex 侧没有内建它。
-#   ⚠️ 顺序依赖：该内建市场只在**交互式 TUI 首次启动**时落地，`-p` / 脚本模式不触发。
-#   所以全新机器上必须**先起一次 `claude` 进交互界面**，再跑 install.sh，否则这条会被跳过。
-plugin - superpowers@claude-plugins-official claude-code
-
 # 示例：以 git clone 方式跟踪上游、不收编进本仓库的 skill
 # clone https://github.com/blader/humanizer humanizer

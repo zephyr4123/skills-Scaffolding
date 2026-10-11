@@ -39,7 +39,6 @@
 - **Multica 记忆读取**（把 workspace 的 issue 网络/结论/轨迹/成本读全读透、只读不写、token 高效）：`zephyr-multica-read`
 - **多 agent Workflow 编排**（有份量的多步工程活，决定何时上编排、选什么形状与范式；长跑 workflow 卡住 / 大批失败 / 放量前评估也走它）：`zephyr-workflow-orchestration` ⚙️CC
 - **让外部长任务跑完来找你**（外部系统上的任务 / CI / 部署 / 远程队列这类不会主动通知你的活；含「静默≠正常」的哨兵纪律）：`zephyr-background-watch` ⚙️CC（依赖 Monitor 与后台任务）
-- **开发流程纪律**（superpowers 插件：`brainstorming`、`writing-plans`、`systematic-debugging` 等）：**仅在用户点名要求时使用，绝不自主加载**——它很重、时间-收益杠杆低，日常用轻量 skill 小步快跑 + workflow 对抗性审查替代
 
 ### MCP 工具（仅 Claude Code 侧有）
 
@@ -52,6 +51,6 @@
 ## 原则
 
 - 设计类任务：以 `impeccable` 为主导，`frontend-design` 等审美类做叠加约束，不要同时开多个主导
-- 插件类 skill（swiftui-pro、ios-swift-skills、superpowers）依赖插件已安装；缺了就按仓库根的 `install.manifest` 安装（或跑仓库的 `scripts/install.sh`）
+- 插件类 skill（swiftui-pro、ios-swift-skills）依赖插件已安装；缺了就按仓库根的 `install.manifest` 安装（或跑仓库的 `scripts/install.sh`）
 - **引擎适配**：标 ⚙️CC 的在 Codex 上不可用——不是话题不符，是内容依赖 Claude Code 专有能力或硬编码了 `.claude/` 路径，调了会空转。拿不准就看 skill frontmatter 的 `engines:`
 - 完整清单与每个 skill 的详情：仓库根的 `README.md`

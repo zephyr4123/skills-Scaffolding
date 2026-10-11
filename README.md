@@ -169,7 +169,6 @@ bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claud
 # 终端 CLI 写法（headless / 脚本化 / agent 操作用这套）
 claude plugin marketplace add twostraws/swiftui-agent-skill
 claude plugin install swiftui-pro@swiftui-agent-skill
-claude plugin install superpowers@claude-plugins-official
 ```
 
 会话内则是同名的斜杠形式：`/plugin marketplace add …`、`/plugin install …`。
@@ -186,10 +185,7 @@ codex plugin add swiftui-pro@swiftui-agent-skill
 | 插件 | 为什么值得装 | 引擎 | 档案 |
 |---|---|---|---|
 | **swiftui-pro** | Paul Hudson（Hacking with Swift 作者）出品，按九份参考清单系统审查 SwiftUI 代码的现代 API、数据流与性能 | 两个都行 | [查看](catalog/swiftui-pro.md) |
-| **superpowers** | 软件工程流程纪律全家桶（obra/Jesse Vincent 出品，经 Anthropic 官方市场分发）：脑暴、计划、TDD、系统化调试（14 个 skill）——很重，建议按需点名使用 | 仅 Claude Code | [查看](catalog/superpowers.md) |
 | ~~**ios-swift-skills**~~ | iOS 开发一包全覆盖（10 个 skill）。**⚠️ 当前装不上**，见下方说明 | 暂不可用 | [查看](catalog/ios-swift-skills.md) |
-
-> ⚠️ **`superpowers` 有个顺序依赖**：它所在的 Anthropic 官方市场 `claude-plugins-official` 是 Claude Code 内建的，但**只在交互式界面首次启动时才落地**，`-p` / 脚本模式不触发。所以全新机器上要**先在终端起一次 `claude`（进到界面再退出），再跑 install.sh**，否则这条会被跳过。install.sh 检测到这种情况会打印同样的提示。
 
 > ⚠️ **`ios-swift-skills` 当前对所有新用户不可用**（v1.7.x 实测）：上游 `patrickserrano/skills` 的 `.claude-plugin/` 下只有 `plugin.json`，**没有 `marketplace.json`**，两个引擎 add 都会失败。报错文案是「Marketplace file not found at 〈本地缓存路径〉」——**指向本地路径，极易误判成自己环境坏了**，根因其实在上游仓库结构。已从 `install.manifest` 注释掉；上游补上清单后取消注释即可恢复。
 
@@ -446,7 +442,6 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 # 插件：plugin <marketplace 来源（github repo 或 URL；官方市场填 -）> <插件@市场>
 plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills
 plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill
-plugin - superpowers@claude-plugins-official
 
 # git 来源 skill（跟踪上游更新、不收编进仓库）：clone <git 地址> <目录名>
 # clone https://github.com/someone/some-skill some-skill

@@ -48,9 +48,6 @@ Claude Code 的 Workflow 工具很强,但「什么时候上、上多大、什么
 
 ## FAQ
 
-**Q:和 superpowers 那套重流程 skill 什么关系?**
-A:替代关系。本人路线是「轻量 skill 小步快跑 + workflow 对抗审查」替掉 brainstorming / writing-plans 那套重流程——本 skill 就是那套轻打法的编排纪律。
-
 **Q:通用吗?**
 A:通用。范式与纪律与语言 / 技术栈无关,任何项目都能用。**个人 skill**(非 AE)。
 
