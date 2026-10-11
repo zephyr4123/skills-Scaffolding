@@ -205,6 +205,43 @@ class LegacyAndMigrationTest(ProjectCase):
         self.assertTrue((self.root / "AGENTS.md").is_symlink())
         self.assertTrue(any("AGENTS.md" in s for s in self.skips(results)))
 
+    def test_codex_variant_of_old_injection_in_agents_md_is_cleaned(self):
+        # 更早期有一版把 .claude 批量替换成了 .Codex，留下了这种从来没生效过的 AGENTS.md
+        (self.root / "AGENTS.md").write_text("## Skill 脚手架\n@.Codex/skills-guide.md\n@.Codex/habits.md\n", encoding="utf-8")
+        self.init()
+        text = (self.root / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertNotIn("skills-guide", text)
+        self.assertIsNotNone(common.read_block(text, ip.REDLINES_TAG))
+
+    def test_agents_md_symlinked_to_claude_md_is_one_entry(self):
+        # 常见写法：AGENTS.md -> CLAUDE.md，两个引擎读同一个文件。红线写进 CLAUDE.md 本体，不加自引用
+        (self.root / "CLAUDE.md").write_text("# 项目约定\n\n原有内容。\n", encoding="utf-8")
+        (self.root / "AGENTS.md").symlink_to("CLAUDE.md")
+        results = self.init()
+        self.assertEqual(os.readlink(self.root / "AGENTS.md"), "CLAUDE.md")
+        text = (self.root / "CLAUDE.md").read_text(encoding="utf-8")
+        self.assertTrue(text.startswith("# 项目约定\n\n原有内容。\n"))
+        self.assertIsNotNone(common.read_block(text, ip.REDLINES_TAG))
+        self.assertNotIn("@AGENTS.md", text)
+        self.assertFalse([m for lvl, m in results if lvl == common.FAIL])
+        self.assertEqual(self.fixes(self.init()), [])
+
+    def test_claude_md_symlinked_to_agents_md_is_one_entry(self):
+        (self.root / "AGENTS.md").write_text("# 项目约定\n", encoding="utf-8")
+        (self.root / "CLAUDE.md").symlink_to("AGENTS.md")
+        self.init()
+        self.assertTrue((self.root / "CLAUDE.md").is_symlink())
+        text = (self.root / "AGENTS.md").read_text(encoding="utf-8")
+        self.assertIsNotNone(common.read_block(text, ip.REDLINES_TAG))
+        self.assertNotIn("@AGENTS.md", text)
+
+    def test_tracked_settings_local_json_gets_a_warning(self):
+        (self.root / ".claude").mkdir()
+        (self.root / ".claude" / "settings.local.json").write_text("{}\n", encoding="utf-8")
+        subprocess.run(["git", "add", "-f", ".claude/settings.local.json"], cwd=self.root, check=True)
+        results = self.init()
+        self.assertTrue(any("git rm --cached" in s for s in self.skips(results)))
+
     def test_claude_auto_memory_is_moved_into_project(self):
         old = self.claude_home / "projects" / ip.claude_project_key(self.root) / "memory"
         old.mkdir(parents=True)

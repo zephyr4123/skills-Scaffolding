@@ -28,7 +28,8 @@ from common import (
 
 REDLINES_TAG = "skills-scaffolding:redlines"
 REDLINES_NOTE = "由 skills-scaffolding 写入；可直接修改，改过后脚手架更新会跳过本段"
-_LEGACY_CLAUDE_SECTION = re.compile(r"\n*## Skill 脚手架\n(?:@\.claude/(?:skills-guide|habits)\.md\n?)+")
+# 更早期的 @import 注入（从来没生效过）；有一版把 .claude 批量替换成了 .Codex，一并认
+_LEGACY_SECTION = re.compile(r"\n*## Skill 脚手架\n(?:@\.(?:claude|codex|Codex)/(?:skills-guide|habits)\.md\n?)+")
 
 
 def claude_project_key(root: Path) -> str:
@@ -39,6 +40,15 @@ def claude_project_key(root: Path) -> str:
 def _is_legacy_link(p: Path) -> bool:
     # 老版本把 CLAUDE.local.md / AGENTS.md 做成指向脚手架仓库的符号链接
     return p.is_symlink() and "skills-scaffolding" in os.readlink(p)
+
+
+def _shared_entry(root: Path) -> Path | None:
+    """AGENTS.md 与 CLAUDE.md 是同一个文件（一个链到另一个）时返回那个真实文件：红线写进它，不用再引用。"""
+    agents, claude = root / "AGENTS.md", root / "CLAUDE.md"
+    if not (agents.is_symlink() or claude.is_symlink()) or not (agents.exists() and claude.exists()):
+        return None
+    target = agents.resolve()
+    return target if target == claude.resolve() and target.parent == root.resolve() else None
 
 
 # ---------- 索引 ----------
@@ -74,14 +84,15 @@ def cleanup_legacy(root: Path, apply: bool) -> list[Result]:
             if apply:
                 (root / rel).unlink()
 
-    claude_md = root / "CLAUDE.md"
-    if claude_md.is_file() and not claude_md.is_symlink():
-        text = claude_md.read_text(encoding="utf-8")
-        new = _LEGACY_CLAUDE_SECTION.sub("\n", text)
-        if new != text:
-            results.append((FIX, "CLAUDE.md 删除早期的「Skill 脚手架」@ 引用（从来没生效过）"))
-            if apply:
-                write_if_changed(claude_md, new)
+    for name in ("CLAUDE.md", "AGENTS.md"):
+        entry = root / name
+        if entry.is_file() and not entry.is_symlink():
+            text = entry.read_text(encoding="utf-8")
+            new = _LEGACY_SECTION.sub("\n", text)
+            if new != text:
+                results.append((FIX, f"{name} 删除早期的「Skill 脚手架」@ 引用（从来没生效过）"))
+                if apply:
+                    write_if_changed(entry, new)
 
     gitignore = root / ".gitignore"
     if gitignore.is_file():
@@ -188,7 +199,7 @@ def sync_seed_memory(root: Path, seed: Path, apply: bool) -> list[Result]:
 
 
 def sync_redlines(root: Path, seed: Path, apply: bool) -> list[Result]:
-    agents = root / "AGENTS.md"
+    agents = _shared_entry(root) or root / "AGENTS.md"
     if agents.is_symlink() and not _is_legacy_link(agents):
         return [(SKIP, "AGENTS.md 是指向别处的符号链接，没有写入红线，需要你手动决定")]
     inner = (seed / "redlines.md").read_text(encoding="utf-8").strip()
@@ -199,20 +210,22 @@ def sync_redlines(root: Path, seed: Path, apply: bool) -> list[Result]:
     if current is not None:
         cur_inner, cur_sha = current
         if text_sha(cur_inner.strip()) != cur_sha:
-            return [(SKIP, "AGENTS.md 的红线区块被项目改过，未跟随脚手架更新")]
+            return [(SKIP, f"{agents.name} 的红线区块被项目改过，未跟随脚手架更新")]
         if cur_sha == sha:
-            return [(OK, "AGENTS.md 红线区块已是最新")]
+            return [(OK, f"{agents.name} 红线区块已是最新")]
     if apply:
         if agents.is_symlink():
             agents.unlink()
         write_if_changed(agents, upsert_block(text, REDLINES_TAG, inner, sha=sha, note=REDLINES_NOTE))
-    return [(FIX, "AGENTS.md 写入红线区块" if current is None else "AGENTS.md 红线区块更新到新版")]
+    return [(FIX, f"{agents.name} 写入红线区块" if current is None else f"{agents.name} 红线区块更新到新版")]
 
 
 def claude_entry(root: Path, apply: bool) -> list[Result]:
     results: list[Result] = []
     claude_md = root / "CLAUDE.md"
-    if claude_md.is_symlink():
+    if _shared_entry(root):
+        results.append((OK, "CLAUDE.md 与 AGENTS.md 是同一个文件，红线直接可见，不用引用"))
+    elif claude_md.is_symlink():
         results.append((SKIP, "CLAUDE.md 是符号链接，没改；请确认它能读到 AGENTS.md"))
     else:
         text = claude_md.read_text(encoding="utf-8") if claude_md.exists() else ""
@@ -236,7 +249,14 @@ def claude_entry(root: Path, apply: bool) -> list[Result]:
                 data["autoMemoryDirectory"] = target
                 write_if_changed(settings, json.dumps(data, indent=2, ensure_ascii=False) + "\n")
 
-    if (root / ".git").exists():
+    tracked = (root / ".git").exists() and subprocess.run(
+        ["git", "ls-files", "--error-unmatch", ".claude/settings.local.json"], cwd=root, capture_output=True,
+    ).returncode == 0
+    if tracked:
+        # 已被跟踪的文件 .gitignore 挡不住；取消跟踪会改动仓库，交给人决定
+        results.append((SKIP, ".claude/settings.local.json 已被 git 跟踪，里面的记忆目录是本机绝对路径，"
+                              "提交会带进仓库；建议 git rm --cached .claude/settings.local.json"))
+    elif (root / ".git").exists():
         # 不算本机的全局 excludes：项目会被别的机器 clone，必须靠仓库自己的 .gitignore 挡住
         ignored = subprocess.run(
             ["git", "-c", f"core.excludesFile={os.devnull}", "check-ignore", "-q", ".claude/settings.local.json"],
