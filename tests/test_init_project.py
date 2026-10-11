@@ -114,6 +114,15 @@ class ExistingFilesTest(ProjectCase):
         self.init()
         self.assertEqual((self.root / "CLAUDE.md").read_text(encoding="utf-8").count("@AGENTS.md"), 1)
 
+    def test_gitignore_entry_gets_its_own_block(self):
+        # 直接接在末尾会混进项目原有的最后一段（比如某个密钥目录的说明下面），读起来像那段的一部分
+        (self.root / ".gitignore").write_text("# 密钥（模板见 example）\nsecrets/\n", encoding="utf-8")
+        self.init()
+        self.assertEqual(
+            (self.root / ".gitignore").read_text(encoding="utf-8"),
+            "# 密钥（模板见 example）\nsecrets/\n\n# Claude Code 本机设置（里面的自动记忆目录是本机绝对路径）\n"
+            ".claude/settings.local.json\n")
+
     def test_invalid_settings_json_is_not_overwritten(self):
         (self.root / ".claude").mkdir()
         (self.root / ".claude" / "settings.local.json").write_text("{坏的 json")

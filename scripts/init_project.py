@@ -277,7 +277,8 @@ def claude_entry(root: Path, apply: bool) -> list[Result]:
             if apply:
                 gitignore = root / ".gitignore"
                 text = gitignore.read_text(encoding="utf-8") if gitignore.exists() else ""
-                write_if_changed(gitignore, (text.rstrip("\n") + "\n" if text.strip() else "") + ".claude/settings.local.json\n")
+                block = "# Claude Code 本机设置（里面的自动记忆目录是本机绝对路径）\n.claude/settings.local.json\n"
+                write_if_changed(gitignore, (text.rstrip("\n") + "\n\n" if text.strip() else "") + block)
     return results or [(OK, "Claude Code 已接入 AGENTS.md 与 .memory")]
 
 
