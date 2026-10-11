@@ -1,7 +1,7 @@
 # motionsites（MCP）
 
 - **来源**：MotionSites 官方托管服务 — <https://motionsites.ai>（http 型 MCP，无本地进程）
-- **接入**：`mcp/registry.json` 登记，install.sh 注入 Claude Code user scope
+- **接入**：`mcp/registry.json` 登记，scripts/install.py 注入 Claude Code user scope
 - **一句话**：高质量网页设计 prompt 库——按风格/主题检索设计 prompt，取全文直接喂给前端生成流程，还能找视觉相似的相邻设计。
 - **凭据**：无（账号额度由服务端按登录态/来源管）
 - **额度**：无订阅账号只能开 3 条免费 prompt，premium prompt 一律要订阅——**tool 结果里出现升级提示时如实转告用户**（服务方要求，别吞掉）

@@ -2,249 +2,133 @@
 
 # 🧰 Skills Scaffolding
 
-**个人 Agent Skill 脚手架 —— 收编、分发、恢复、注入，一站式**
+**个人 Agent 脚手架 —— skill 装在机器上，红线和记忆跟着项目走**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Skills](https://img.shields.io/badge/skills-24-blue)
-![Claude Code](https://img.shields.io/badge/Claude_Code-plugin_marketplace-D97706)
+![Skills](https://img.shields.io/badge/skills-22-blue)
+![Claude Code](https://img.shields.io/badge/Claude_Code-supported-D97706)
 ![Codex](https://img.shields.io/badge/Codex-supported-10A37F)
 
-*两条命令订阅全套 skill 与协作习惯 —— Claude Code 与 Codex 通用，或 git clone 完全掌控*
+*Claude Code 与 Codex 双引擎：读同一份红线、写同一个 `.memory/`，各用自己最擅长的方式*
 
 </div>
 
 ---
 
-一套可复制的个人 Agent Skill 脚手架。它做四件事：
+它做三件事：
 
-1. **收编**：把散落各处的 Agent Skill 收进一个有版本管理的仓库，配上"每个是干啥的"总索引
-2. **市场分发**：本仓库自身就是一个插件市场，**Claude Code 与 Codex 都能订阅**，各两条命令拿到全套
-3. **一键恢复**：git 模式下任何机器一条命令装齐全部 skill 和插件，幂等、只补缺、不重复下载
-4. **会话注入**：让每次会话自动知道**什么场景用哪个 skill**（GUIDE.md）和**主人喜欢怎么干活**（HABITS.md）——插件模式由 hook 完成，git 模式说一句"安装 zephyr-scaffold-init 脚手架"
+1. **收编 skill**：散落的 skill 收进一个有版本管理的仓库，链进两个引擎的全局 skill 目录。每台机器装一次，所有项目共用
+2. **给项目装红线**：主人的红线、写代码与验证标准、工作习惯，写进项目的 `AGENTS.md`。两个引擎每次会话都整份加载，不可能看漏
+3. **给项目装共享记忆**：`.memory/` 随 git 走。Claude Code 把它当作自己的自动记忆读写，Codex 由 hook 注入索引——谁写的另一边都能用
 
-> 这份 README 同时写给两类读者：**人类**（往下看快速开始）和 **AI 助手**（见[给 AI 助手的操作手册](#给-ai-助手的操作手册)——如果你是一个正在读这份文档的模型，无论跑在 Claude Code 还是 Codex 上，那一节都是为你写的）。
+> 这份 README 写给两类读者：**人类**看[快速开始](#快速开始)；**AI 助手**看[给 AI 助手的操作手册](#给-ai-助手的操作手册)。
 
 ## 目录
 
 - [快速开始](#快速开始)
-- [精选第三方插件](#精选第三方插件catalog)
+- [架构](#架构)
+- [同步规则](#同步规则)
 - [引擎适配](#引擎适配)
-- [端到端原理](#端到端原理)
 - [给 AI 助手的操作手册](#给-ai-助手的操作手册)
-- [仓库结构](#仓库结构)
+- [仓库结构与测试](#仓库结构与测试)
 - [Skill 总索引](#收编的-skillskills)
+- [精选第三方插件](#精选第三方插件catalog)
 - [MCP 总索引](#收编的-mcpmcp)
-- [install.manifest 格式](#installmanifest-格式)
-- [维护手册](#维护手册)
+- [从 2.x 升级](#从-2x-升级)
 - [Fork 指南与 FAQ](#fork-指南与-faq)
 
 ---
 
 ## 快速开始
 
-先选模式（二选一，别同时用）：
+前提：git、python3（3.10+，只用标准库），Claude Code 与 Codex 至少装了一个。
 
-| 你是谁 | 选哪条 | 成本 |
-|---|---|---|
-| **使用者**：想直接用这套 skill 和习惯 | 插件市场模式 | 两条命令，自动更新 |
-| **维护者 / 魔改者**：想改 skill 内容、收编自己的东西 | git 仓库模式 | clone + 一条命令，改完即生效 |
-
-### 模式一：插件市场（推荐给使用者）
-
-**Claude Code**——在会话里执行两条斜杠命令：
-
-```
-/plugin marketplace add zephyr4123/skills-Scaffolding
-/plugin install zephyr-skills@skills-scaffolding
-```
-
-或在终端里用**等价的 CLI 写法**（headless / CI / 脚本化 / 让 agent 代劳时用这套——`/plugin` 斜杠命令在非交互环境下不可用）：
-
-```bash
-claude plugin marketplace add zephyr4123/skills-Scaffolding
-claude plugin install zephyr-skills@skills-scaffolding
-```
-
-> 首次在一个新目录里起交互式会话时，Claude Code 会先弹一屏 workspace 信任确认（`Is this a project you created or one you trust?`），选信任才进得去。这是它的安全设计，跟本脚手架无关。
-
-**Codex**——终端里执行两条命令：
-
-```bash
-codex plugin marketplace add https://github.com/zephyr4123/skills-Scaffolding
-codex plugin add zephyr-skills@skills-scaffolding
-```
-
-> Codex 原生读 `.claude-plugin/` 格式的市场清单（官方把 `.claude-plugin/marketplace.json` 列为 legacy-compatible 路径）。插件清单这边本仓库放了**两份**——Codex 优先读 `.codex-plugin/plugin.json`（19 个），Claude 读 `.claude-plugin/plugin.json`（24 个），**同一个仓库、同一条命令、同一个版本号，两个引擎各拿各的**，原理见[引擎适配](#引擎适配)。
-
-**装完你得到什么：**
-
-- Claude Code 上全部 **24** 个 skill、Codex 上 **19** 个立即可用（以 `zephyr-skills:xxx` 命名空间注册，模型自动按场景调用）。差额是内容上依赖 Claude Code 专有能力的那几个，见[引擎适配](#引擎适配)
-- **每次会话自动注入** GUIDE（skill 路由）与 HABITS（协作习惯）——插件的 SessionStart hook 完成，零脚本、零配置
-- **更新省心**：`claude plugin update zephyr-skills` / `codex plugin add zephyr-skills@skills-scaffolding` 拿到最新
-
-> ⚠️ **Codex 用户注意**：插件自带的 hook **默认不被信任**，仅安装插件**不足以**拿到 GUIDE/HABITS 注入。首次启动 Codex 时会**自动弹**信任确认屏（不用手动敲 `/hooks`），选 `Trust all and continue` 之后 hook 才会执行。实测是**两个屏幕**（先项目信任、再 hook review），且第二屏**默认选中的是 `Review hooks` 而不是 `Trust all`**，所以最少要按 `Enter → ↓ → Enter` 三次。这是 Codex 的安全设计，不是装坏了。
-
-**日常管理：**
-
-```bash
-claude plugin disable zephyr-skills --scope project   # 本项目关闭（如工作/公司项目），其他项目不受影响
-claude plugin enable zephyr-skills --scope project    # 重新打开
-claude plugin update zephyr-skills                    # 更新到最新版本
-claude plugin uninstall zephyr-skills                 # 整体卸载
-```
-
-**边界说明：**
-
-- catalog 里的第三方插件**不会**随本插件自动安装——它们在别人的市场上，各有各的装法与限制，见下方[精选第三方插件](#精选第三方插件catalog)一节
-- 插件模式是**只读订阅**：想改 skill 内容，走模式二
-
-### 模式二：git 仓库（推荐给维护者 / 想改 skill 的人）
-
-前提：机器上已装 git，以及 [Claude Code](https://claude.com/claude-code) 与 Codex **至少一个**（`install.sh` 会自动探测装了哪些，只处理存在的）。
+### 1. 每台机器一次：装机器层
 
 ```bash
 git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding
-bash ~/coding/personal/skills-scaffolding/scripts/install.sh
+python3 ~/coding/personal/skills-scaffolding/scripts/install.py
 ```
 
-`install.sh` **自己探测这台机器上有哪些引擎**，只装存在的那些：
+脚本自己探测这台机器装了哪个引擎，只处理存在的：
 
-| 探测到 | 做什么 |
+| 引擎 | 做什么 |
 |---|---|
-| Claude Code | 24 个 skill 链接进 `~/.claude/skills`，`claude plugin` 装三方插件 |
-| Codex | 19 个 Codex 适用的 skill 链接进 `~/.agents/skills`，`codex plugin` 装三方插件 |
-| 两个都有 | 都做；git 来源的 skill 只 clone 一份，另一边符号链接共用 |
+| Claude Code | 适用的 skill 链进 `~/.claude/skills`；装第三方插件；注入 MCP（user scope）。**自带的自动记忆保持开启，不动** |
+| Codex | 适用的 skill 链进 `~/.agents/skills`；装第三方插件；`config.toml` 写 `model_context_window = 1000000`、关原生 `memories`；装项目记忆 SessionStart hook；全局 `~/.codex/AGENTS.md` 写入记忆读写规则 |
 
-不论探测到哪个引擎，脚本最后都会**无条件**跑一次 `scripts/build-agents-md.sh`，从 `GUIDE.md + HABITS.md` 重新生成 `scaffold/AGENTS.md`（Codex 侧的注入入口）。**这会写你 clone 出来的工作树**——但内容是幂等派生的，源没改时重新生成的结果一字不差，`git status` 保持干净。
-
-**想先试用、不污染现有环境？** 脚本认三个环境变量覆盖点：
+> ⚠️ **Codex 装完要做一次**：打开 `codex` 输入 `/hooks`，信任 `project_memory.py`。没信任的 hook 不会执行，记忆就注入不了。以后只有 hook 定义变了才需要重新信任。
 
 ```bash
-CLAUDE_SKILLS_DIR=/tmp/试用/claude \
-CODEX_SKILLS_DIR=/tmp/试用/codex \
-bash scripts/install.sh          # 链接全建到临时目录，不碰 ~/.claude 与 ~/.agents
+python3 scripts/install.py --check       # 只读体检，有缺口退出码 1
+python3 scripts/install.py --uninstall   # 撤掉 skill 链接与 Codex 记忆组件（插件、MCP、config 值不动）
 ```
 
-（第三个是 `INSTALL_MANIFEST`，可指向你自己的清单。注意这三个只覆盖**本脚本的写入目标**，不隔离引擎自身的配置与 skill 发现——引擎级隔离是 Claude Code / Codex 自己的事。）
+已存在的同名**真实目录**一律跳过，不接管；仓库里删掉的 skill，留在 skill 根里的失效链接会被清掉。
 
-另外：`~/.claude/skills` 或 `~/.agents/skills` 下如果已经有**同名的真实目录**（不是符号链接），脚本会明确跳过并提示，**不会接管、不会覆盖**你原有的东西。
+### 2. 每个项目一次：装项目层
 
-脚本幂等，重跑安全：**符号链接会无条件重建**（目标不变，只是 mtime 刷新）、**已存在的真实目录不接管**（会明确跳过并提示）、已装的插件跳过、已克隆的仓库 `git pull`——不会重复下载任何东西。
-
-> 克隆到别的路径也行，脚本会从自身位置定位仓库；但默认路径能让 zephyr-scaffold-init 的自动发现更顺畅。
-
-### 新项目（仅 git 模式；插件模式已由 hook 全自动注入，**不要**再说这句话，会双重注入）
-
-在项目目录里对 Claude Code 或 Codex 说一句：
+在项目里对 Claude Code 或 Codex 说一句：
 
 > **安装 zephyr-scaffold-init 脚手架**
 
-> 请带上 skill 名说全——只说"装脚手架"是个通用词，可能给你装成别的框架脚手架（真实踩过的坑）。
+它会体检本机、预览改动、征得同意后安装，再起新会话验证真的生效。也可以直接跑：
 
-它会执行 `zephyr-scaffold-init` skill：先体检环境（缺 skill 就补、全齐就零动作），再按引擎注入：
+```bash
+python3 ~/coding/personal/skills-scaffolding/scripts/init_project.py <项目目录> --check   # 先看会改什么
+python3 ~/coding/personal/skills-scaffolding/scripts/init_project.py <项目目录>
+```
 
-| 引擎 | 注入方式 |
-|---|---|
-| Claude Code | 项目根的 `CLAUDE.local.md` **本身**做成符号链接，指向 `scaffold/AGENTS.md`（GUIDE+HABITS 的合并产物） |
-| Codex | 项目根的 `AGENTS.md` **本身**做成符号链接，指向同一个文件 |
+装完把 `AGENTS.md`、`CLAUDE.md`、`.memory/`、`.gitignore` 的改动提交进 git——这样红线和记忆才跟着项目走。
 
-两侧同一套机制、同一个目标文件，都不复制内容——仓库里改一行，所有已注入项目下次会话自动跟进。项目自己的 `CLAUDE.md` 不受影响（与 `CLAUDE.local.md` 同时加载）。两个入口可安全并存：**Codex 默认不读 `CLAUDE.md` / `CLAUDE.local.md`**，不会重复注入。
+### 3. 脚手架更新之后
 
-> 前提：这台机器跑过一次上面的安装命令（否则模型还不认识 zephyr-scaffold-init 这个 skill）。
-
-### 日常
-
-- **忘了某个 skill 是干啥的** → 看下面的[总索引](#收编的-skillskills)
-- **收了新 skill / 悟了新经验** → 见[维护手册](#维护手册)
+仓库里 `git pull`，重跑 `install.py`（机器层）；然后在各项目里重跑 `init_project.py`（或说"同步脚手架"），规则见[同步规则](#同步规则)。
 
 ---
 
-## 精选第三方插件（catalog/）
+## 架构
 
-这套脚手架的另一半价值：不只收编 skill，还替你**把第三方插件的坑踩完了**——每个都在真实项目里用过、建了档案（来源、装法、每个 skill 是干啥的），试错成本已经付过。
+| | 机器层（每台机器一次） | 项目层（每个项目一次，跟 git 走） |
+|---|---|---|
+| **两个引擎共享** | `skills/` 链进各自的 skill 根 | `AGENTS.md` 红线区块、`.memory/` 共享记忆 |
+| **Claude Code** | 什么都不加，自带自动记忆照常工作 | `CLAUDE.md` 里一行 `@AGENTS.md`；`.claude/settings.local.json` 的 `autoMemoryDirectory` 指向 `.memory` |
+| **Codex** | hook、记忆读写规则、上下文 100 万、关原生 memories | 不用装，hook 自己找到 `.memory/` |
 
-**Claude Code**（会话内斜杠命令，或终端里用等价的 CLI 写法）：
+项目层的内容来自 `seed/`：
 
-```bash
-# 终端 CLI 写法（headless / 脚本化 / agent 操作用这套）
-claude plugin marketplace add twostraws/swiftui-agent-skill
-claude plugin install swiftui-pro@swiftui-agent-skill
-```
+- `seed/redlines.md` → 项目 `AGENTS.md` 的红线区块：🔴 9 条红线 + 写代码标准 + 验证与排查纪律 + 工作方式（Git、Issue、搜索、决策、立规矩、汇报）
+- `seed/memory/` → 项目 `.memory/`：skill 库总览、前端 / iOS / 通用 skill 路由、MCP 工具
 
-会话内则是同名的斜杠形式：`/plugin marketplace add …`、`/plugin install …`。
+### 为什么这样分
 
-**Codex**：
+- **skill 是工具，留在机器上**：项目里不建 skill 目录，所有项目共用全局那一份。记忆和红线是知识，才跟项目走
+- **红线进入口文件，不进记忆**：记忆加载时只露出索引里的一行摘要，正文要模型自己去读——红线藏在记忆里，哪次忘了翻就等于失效。入口文件每次整份加载，看不见是不可能的
+- **红线只有一份**：写在 `AGENTS.md`，Claude 侧由 `CLAUDE.md` 里的 `@AGENTS.md` 引入（项目同时有这两个文件时，Claude 默认只读 `CLAUDE.md`）。路径在项目内，过得了 Claude Code 的外部引用闸。不写两份，免得改一边忘一边
+- **记忆共享，管法不同**：Claude Code 本身很会写记忆，不给它加规则，只把自动记忆目录指向 `.memory/`。Codex 原生记忆不分项目、整份注入，所以关掉，改由 hook 注入本项目索引，再用全局 `AGENTS.md` 里的读写规则教它怎么写。记忆格式统一以 Claude Code 为准
+- **Codex 的读写规则放机器层**：它是对 Codex 的适配，不是项目知识；放进项目 `AGENTS.md` 的话，Claude 读到也会被它框住
+- **`autoMemoryDirectory` 写进 `settings.local.json`**：这个设置只接受绝对路径，进 git 就会在别的机器上指错地方，所以每台机器各写一次，并由 `.gitignore` 挡住
 
-```bash
-codex plugin marketplace add https://github.com/twostraws/swiftui-agent-skill
-codex plugin add swiftui-pro@swiftui-agent-skill
-```
+## 同步规则
 
-或者直接跑 `scripts/install.sh`，它按 `install.manifest` 给每个引擎装它装得上的那些。
+脚手架写进项目的东西都记了内容指纹：记忆记在 frontmatter 的 `metadata.scaffold_sha`，红线记在区块开头的注释里。重跑 `init_project.py` 时：
 
-| 插件 | 为什么值得装 | 引擎 | 档案 |
-|---|---|---|---|
-| **swiftui-pro** | Paul Hudson（Hacking with Swift 作者）出品，按九份参考清单系统审查 SwiftUI 代码的现代 API、数据流与性能 | 两个都行 | [查看](catalog/swiftui-pro.md) |
-| ~~**ios-swift-skills**~~ | iOS 开发一包全覆盖（10 个 skill）。**⚠️ 当前装不上**，见下方说明 | 暂不可用 | [查看](catalog/ios-swift-skills.md) |
+| 情况 | 处理 |
+|---|---|
+| 项目没改过 | 跟着脚手架更新到新版 |
+| 项目改过（人改的或 Claude 自己改的） | 跳过，在输出里列出，由你决定要不要手动合并 |
+| 脚手架撤掉了某条种子记忆 | 项目没改过就一并撤掉，改过就保留 |
+| Claude 只改了 metadata（如 `modified` 时间戳） | 不算改过 |
 
-> ⚠️ **`ios-swift-skills` 当前对所有新用户不可用**（v1.7.x 实测）：上游 `patrickserrano/skills` 的 `.claude-plugin/` 下只有 `plugin.json`，**没有 `marketplace.json`**，两个引擎 add 都会失败。报错文案是「Marketplace file not found at 〈本地缓存路径〉」——**指向本地路径，极易误判成自己环境坏了**，根因其实在上游仓库结构。已从 `install.manifest` 注释掉；上游补上清单后取消注释即可恢复。
-
-插件本体由各自作者维护更新，本仓库只存档案不存副本——所以它们**不会**随 zephyr-skills 自动安装，要用就敲上面的命令；git 模式则由 install.sh 按 `install.manifest` 自动处理。
+所以项目特有的调整可以直接改项目里的红线区块或记忆，之后同步会自动跳过它们。
 
 ---
 
 ## 引擎适配
 
-这套脚手架同时服务三类用户。**下表每一格都是实测结论**——在真实 Codex（`codex-cli 0.145.0`）的隔离环境里装过、跑过、取过证，不是读文档推出来的。
+### 哪 5 个 skill 在 Codex 上跑不了
 
-| | 只用 Claude Code | 只用 Codex | 两个都用 |
-|---|---|---|---|
-| **插件市场** | ✅ `/plugin marketplace add` + `/plugin install` | ✅ `codex plugin marketplace add` + `codex plugin add`（原生读 `.claude-plugin/` 格式） | ✅ 各装各的，同一个仓库 |
-| **可用 skill** | ✅ 24 个 | ✅ 19 个（两条通道都过滤，见下） | ✅ 各取所需 |
-| **GUIDE/HABITS 自动注入** | ✅ 装完即生效 | ⚠️ 装完还要**信任一次 hook**（见下） | ✅ 两边独立生效 |
-| **git 模式一键装** | ✅ `install.sh` 自动探测 | ✅ 同一条命令 | ✅ 自动两边都装，git 来源 skill 只 clone 一份 |
-| **项目级注入** | ✅ `CLAUDE.local.md` **本身**是符号链接 | ✅ `AGENTS.md` **本身**是符号链接 | ✅ 两个入口并存，**Codex 默认不读 `CLAUDE.local.md`**，不会重复注入 |
-| **单一来源** | ✅ 仓库改一行，全机器全项目跟进 | ✅ 同左 | ✅ 同左 |
-
-### ⚠️ Codex 的一个必知差异：hook 信任门槛
-
-**仅安装插件不足以拿到 GUIDE/HABITS 注入。** Codex 把插件自带的 hook 视为 non-managed，默认不执行——这是它的安全设计。首次启动会自动弹信任确认屏（不用手动敲 `/hooks`），选 `Trust all and continue` 之后才生效；全新环境会多一个项目信任屏，合计两下。
-
-装完发现没注入，先看是不是卡在这里，别以为坏了。
-
-### 为什么两边都能读同一份清单
-
-Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产物：
-
-- **市场清单**：官方文档把 `$REPO_ROOT/.claude-plugin/marketplace.json` 列为 legacy-compatible 路径
-- **插件清单**：其开源实现里有 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS = [".codex-plugin/plugin.json", ".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"]`，按序回落，带单测
-- **skill 格式**：两边都是 `SKILL.md` + YAML frontmatter，`name` / `description` 同义
-- **环境变量**：Codex 执行 hook 时会**主动注入** `CLAUDE_PLUGIN_ROOT` / `CLAUDE_PLUGIN_DATA` 做兼容
-
-所以本仓这些 skill 的正文**一个字都没为 Codex 改过**，两边共用。
-
-### 两条分发通道各自怎么过滤
-
-| 通道 | 靠什么过滤 | 实测结果 |
-|---|---|---|
-| **git 模式** | `install.sh` 读每个 skill frontmatter 的 `engines:` | Codex 侧只链 19 个，5 个 Claude-only 一个没链 |
-| **插件模式** | **双 manifest**：Codex 读 `.codex-plugin/plugin.json`（19 条），Claude 读 `.claude-plugin/plugin.json`（24 条） | 两边各拿各的，Claude-only 不进 Codex 的可见清单 |
-
-双 manifest 能成立，是因为 Codex 按 `DISCOVERABLE_PLUGIN_MANIFEST_PATHS` 顺序探测清单：
-
-```
-.codex-plugin/plugin.json  →  .claude-plugin/plugin.json  →  .cursor-plugin/plugin.json
-```
-
-它优先读第一个；而 **Claude Code 只认 `.claude-plugin/plugin.json`**（实测其加载日志形如 `Checking plugin zephyr-skills: skillsPaths=<N> paths`，其中 N 恒等于 `.claude-plugin/plugin.json` 的 skills 条数、与 `.codex-plugin/` 那份的条数无关——多出来的 `.codex-plugin/` 目录对它完全惰性）。同一个仓库、同一条安装命令、同一个版本号——两个引擎各读各的清单。
-
-> `.codex-plugin/plugin.json` 是**派生产物**，由 `scripts/build-codex-manifest.sh` 从 `.claude-plugin/plugin.json` + 各 skill 的 `engines:` 生成，CI 校验其与源同步。手工维护的永远只有那两处。
->
-> 为什么不用别的办法（都实测否掉了）：`agents/openai.yaml` 的 `policy.products` 只有正向白名单、`claude-code` 不是合法取值；manifest 的 `interface` 字段被忽略；`config.toml` 的 `[[skills.config]]` 是用户侧配置、不随插件分发；拆成两个 plugin 要维护两套 ID 与版本。**光靠 GUIDE 标注和正文声明也不够——路由阶段只看得到 name/description/path，正文那时还没被读取。**
-
-### 哪 5 个在 Codex 上跑不了，为什么
-
-每个 skill 的 frontmatter 都有 `engines:` 字段（CI 校验），GUIDE 路由里标 **⚙️CC**：
+每个 skill 的 frontmatter 都有 `engines:` 字段（CI 校验），索引和路由记忆里标 **⚙️CC**：
 
 | Skill | 原因 |
 |---|---|
@@ -256,107 +140,64 @@ Codex 原生认 Claude Code 的插件格式，这不是巧合也不是迁移产�
 
 判定标准是**「内容在另一个引擎上能不能真正执行」**，不是话题相不相关。拿不准一律判窄——标窄了只少推荐一次，标宽了会让人踩空。
 
-## 端到端原理
 
-**内容永远只有仓库里一份**，通过两条通道到达用户。
+### Codex 的几个必知差异（codex-cli 0.162.1 实测）
 
-**插件市场通道**（使用者，全自动）：
-
-```
-┌─ GitHub 仓库（.claude-plugin/ 声明市场与插件）────────────────┐
-│        │  /plugin marketplace add + /plugin install            │
-│        ▼                                                       │
-│  本机插件缓存（~/.claude/plugins/cache/…，随市场刷新自动更新）  │
-│        ├── skills/ × 24 ──────▶ 注册进 Claude Code（Codex 19 个）│
-│        └── SessionStart hook ─▶ 每次会话自动注入 GUIDE + HABITS │
-└────────────────────────────────────────────────────────────────┘
-```
-
-**git 仓库通道**（维护者，符号链接三层，改完即全局生效）：
-
-```
-┌─ 仓库层（单一来源，git 管理）─────────────────────────────┐
-│  skills/<领域>/<skill>/   收编的 skill 完整副本              │
-│  scaffold/GUIDE.md        场景→skill 路由表（面向模型）      │
-│  scaffold/HABITS.md       协作习惯与经验（面向模型）         │
-│  install.manifest         插件与 git 来源 skill 清单         │
-│  catalog/*.md             三方插件档案（面向人类）           │
-└──────────────┬───────────────────────────────────────────┘
-               │ scripts/install.sh（幂等）
-┌─ 机器层 ──────▼───────────────────────────────────────────┐
-│  ~/.claude/skills/<skill> ──符号链接──▶ 仓库/skills/…/<skill> │
-│  Claude Code 插件         ──claude plugin install──▶ 市场    │
-│  scripts/preflight.sh：只读体检，报告缺口，不动任何东西       │
-└──────────────┬───────────────────────────────────────────┘
-               │ zephyr-scaffold-init skill（说"安装 zephyr-scaffold-init 脚手架"触发）
-┌─ 项目层 ──────▼───────────────────────────────────────────┐
-│  <项目>/CLAUDE.local.md ──链接──▶ 仓库/scaffold/AGENTS.md      │
-│  <项目>/AGENTS.md       ──链接──▶ 仓库/scaffold/AGENTS.md      │
-│  → 每次会话自动把 GUIDE + HABITS 读进上下文                   │
-│  （项目自己的 CLAUDE.md 照常并存，不受影响）                  │
-└───────────────────────────────────────────────────────────┘
-```
-
-三条设计决策，也是踩坑后的实测结论：
-
-1. **全程符号链接，不复制内容。** 仓库里改一行 GUIDE/HABITS/skill 正文，所有机器所有项目下次会话自动生效，不存在过期副本。
-2. **项目层必须做成"入口文件本身是符号链接"，绝不能用 `@import`。** Claude Code 展开 `CLAUDE.md` 里的 `@path` 时有一道**外部引用闸**：路径解析出的真实位置必须落在项目根**之内**，否则**静默丢弃**——不报错、不提示。符号链接确实会被跟随，但跟过去仍在项目外，照样被拦；`.claude/rules/` 目录同样受这道闸管。唯一不受限的是入口文件本身——`CLAUDE.md` / `CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件，不是 include，链接指向哪儿都读得到。
-   > ⚠️ 这里原先写的是"相对路径 import 会跟随符号链接，这是反复实验得出的结论"——**半对半错，代价惨重**。链接确实被跟随，但跟过去落在项目外照样被拦掉；正是对的那半句让这个错误设计一直没被怀疑。2026-08-20 用 9 组对照实验 + 独立复验定位，此前它已在 9 个项目里**静默空转了一个多月**，每次注入都"看起来成功"。教训：这类机制的失效是无声的，注入完必须让新会话背出内容才算数。
-3. **一切可重复执行。** preflight.sh 纯只读；install.sh 与 zephyr-scaffold-init 幂等（已就位的链接刷新、已装的插件跳过），且 zephyr-scaffold-init 会顺手把老写法的残留清掉。任何一步中断了重跑即可，不会产生冗余。
+- **hook 要信任一次**：见[快速开始](#1-每台机器一次装机器层)。没信任时 hook 静默不执行
+- **`.agents/` 在沙盒里只读**：workspace-write 沙盒把 `.git`、`.agents`、`.codex` 设为只读，实测 `mkdir .agents` 返回 `Operation not permitted`——所以记忆目录叫 `.memory/` 而不是 `.agents/memory/`
+- **AGENTS.md 不支持引入其他文件**：`@path` 语法不存在，`project_doc_fallback_filenames` 只接受文件名不接受路径。SessionStart hook 的 `additionalContext` 是唯一能把文件内容确定性放进上下文的官方通道
+- **上下文窗口**：配置写 100 万，实际生效 = min(配置, 模型上限) × 95%。gpt-6-astra 的上限是 87.2 万，实测会话里生效的是 828,400
 
 ---
 
 ## 给 AI 助手的操作手册
 
-如果你是一个 Claude Code 或 Codex 会话，用户让你操作这个脚手架，按下表办事。
-
-**第 0 步，先判定模式**：跑 `claude plugin list`（Codex 上跑 `codex plugin list`）——里面有 `zephyr-skills` 就是**插件模式**，skill 与注入已由插件承载，下表标「仅 git 模式」的行**不要执行**（跑 preflight / install.sh / zephyr-scaffold-init 会造成双模式共存、双重注入），对应意图直接回答"本机是插件模式，无需此操作"。没有该插件才按 git 模式继续。
-
-git 模式下先定位仓库根（下表 `<仓库>` 的取值，按顺序尝试）：① 默认 `~/coding/personal/skills-scaffolding`；② `readlink ~/.claude/skills/zephyr-scaffold-init` 反查（链接目标的上三级就是仓库根）；③ 都没有则 `git clone https://github.com/zephyr4123/skills-Scaffolding.git ~/coding/personal/skills-scaffolding`。
+如果你是一个 Claude Code 或 Codex 会话，用户让你操作这个脚手架，按下表办事。仓库默认在 `~/coding/personal/skills-scaffolding`，不在就 `readlink ~/.claude/skills/zephyr-scaffold-init`（或 `~/.agents/skills/…`）上溯三级。
 
 | 用户意图 | 你该做的 |
 |---|---|
-| "安装 zephyr-scaffold-init 脚手架" / "注入 skill 指南"（仅 git 模式） | 调用 `zephyr-scaffold-init` skill；若本机没有该 skill，先按下一行恢复环境，再执行 `<仓库>/skills/general/zephyr-scaffold-init/SKILL.md` 里的步骤 |
-| 恢复/检查环境（仅 git 模式） | 先 `bash <仓库>/scripts/preflight.sh`（只读，退出码 0=完整 1=有缺口）；**仅当有缺口时**才 `bash <仓库>/scripts/install.sh` |
-| 收编一个新 skill | 复制 skill 目录进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE；没有合适领域可新建目录，脚本按 `skills/*/*/` 自动识别），然后：**frontmatter 加 `engines:` 字段**（CI 硬校验；内容依赖某引擎专有能力或硬编码 `.claude/` 路径的只写那一个）、README 索引表加一行**并更新分组标题里的计数**、GUIDE.md 路由加一条（claude-only 的标 ⚙️CC）、`.claude-plugin/plugin.json` 的 `skills` 数组加一条路径、跑 `bash scripts/build-codex-manifest.sh` 重新生成 Codex 侧清单（CI 会校验同步），最后跑一次 install.sh 让链接生效 |
-| 新增一个三方插件 | `catalog/` 建档案（来源、安装命令、skill 清单），`install.manifest` 加一行 `plugin`，README 插件表加一行，插件含 skill 则 GUIDE.md 路由加一条，最后跑一次 install.sh 完成安装 |
-| 收编一个新 MCP | `mcp/registry.json` 加条目（配置里家目录写 `${HOME}` 占位；凭据只记 `env_required` 键名，值永不入库），`catalog/mcp-<name>.md` 建档案，README MCP 表加一行，GUIDE.md「MCP 工具」加路由，跑 install.sh 注入，按发版流程发版 |
-| 记录新的经验习惯 | 在 HABITS.md 对应小节加一行，无需其他动作（所有已注入项目自动继承） |
-| "这个项目别用这套习惯/skill"（插件模式） | `claude plugin disable zephyr-skills --scope project`，只影响当前项目 |
-| 更新脚手架到最新 | 插件模式 `claude plugin update zephyr-skills`；git 模式在仓库里 `git pull`，符号链接自动生效 |
+| "安装 zephyr-scaffold-init 脚手架" / "同步脚手架" | 调用 `zephyr-scaffold-init` skill；本机没有这个 skill 就先跑下一行恢复环境 |
+| 恢复 / 检查本机环境 | `python3 <仓库>/scripts/install.py --check`（只读）；**有缺口时**才跑 `python3 <仓库>/scripts/install.py` |
+| 收编一个新 skill | 复制进 `skills/<领域>/`（去掉内嵌 `.git`，保留 LICENSE）→ frontmatter 加 `engines:`（依赖某引擎专有能力或写死 `.claude/` 路径的只写那一个，CI 校验）→ README 索引加一行并更新分组计数与徽章 → `seed/memory/` 里对应的路由记忆加一条（仅 Claude 可用的标 ⚙️CC）→ 跑 `install.py` |
+| 新增一个第三方插件 | `catalog/` 建档案 → `install.manifest` 加 `plugin` 行 → README 插件表加一行 → 插件含 skill 则路由记忆加一条 → 跑 `install.py` |
+| 收编一个新 MCP | `mcp/registry.json` 加条目（家目录写 `${HOME}`，凭据只记 `env_required` 键名）→ `catalog/mcp-<name>.md` 档案 → README MCP 表 + `seed/memory/mcp-tools.md` 各加一条 → 跑 `install.py` |
+| 改红线或工作习惯 | 改 `seed/redlines.md` → 发版 → 各项目重跑 `init_project.py` 同步 |
+| 改 Codex 的记忆读写规则 | 改 `engines/codex/memory-rules.md` → 重跑 `install.py` |
+| 更新脚手架 | 仓库 `git pull` → 重跑 `install.py` → 各项目重跑 `init_project.py` |
 
 硬性规则：
 
-- 本仓库的 commit 信息用中文、**绝不带任何 AI 署名**（HABITS.md「Git」小节的头两条）
-- preflight 通过就不要跑安装；不要把 GUIDE/HABITS 的内容复制进任何项目（必须走符号链接）；注入完必须让新会话背出内容验证，别只看链接就报完成
-- 修改 `scripts/*.sh` 时注意：bash 3.2（macOS 默认）里变量后紧跟中文全角字符会解析错误，必须写 `${var}中文` 而不是 `$var中文`
+- 本仓库的 commit 信息用中文、**绝不带任何 AI 署名**（红线第 1 条）
+- 要改全局的红线就改 `seed/redlines.md` 再同步，不要逐个项目手改；某个项目特有的调整才直接改那个项目的区块
+- 装完必须验证：起新会话、禁用文件工具，让它背出红线和记忆索引（命令见 `zephyr-scaffold-init` 第 4 步）。文件在、链接对，都证明不了内容进了上下文
 
 ---
 
-## 仓库结构
+## 仓库结构与测试
 
 ```
-skills/           收编的 skill 完整副本，按领域分组（design/frontend/ios/writing/general）
-                  每个 SKILL.md 的 frontmatter 用 engines: 声明适用引擎，是全仓的过滤真相源
-catalog/          第三方插件与 MCP 档案：本体由上游管理，这里记来源、装法、用途、坑
-mcp/              MCP server 登记册（registry.json，单一来源）：配置 + 凭据键名（值永不入库）
-                  install.sh 据此幂等注入 Claude Code user scope，preflight.sh 只读对账
-scaffold/         注入文件：GUIDE.md（场景→skill 路由表）+ HABITS.md（协作习惯与红线，活文档）
-                  AGENTS.md 是二者的合并派生产物，供 Codex 侧注入用（勿手改）
-.claude-plugin/   marketplace.json + plugin.json（24 个 skill）：Claude Code 读这份
-.codex-plugin/    plugin.json（19 个 skill）：Codex 优先读这份，派生产物（勿手改）
-.github/          发版流水线：push 即校验清单，版本号变更自动打 tag + 发 Release
-hooks/            插件模式的 SessionStart hook：自动把 scaffold/ 两个文件注入会话
-install.manifest  声明式清单：装哪些第三方插件（可标适用引擎）、克隆哪些 git 来源 skill
+skills/             收编的 skill，按领域分组；frontmatter 的 engines: 决定链进哪个引擎
+seed/               项目层种子：redlines.md（红线区块）+ memory/（种子记忆，Claude 记忆格式）
+engines/codex/      Codex 适配：project_memory.py（SessionStart hook）+ memory-rules.md（读写规则）
 scripts/
-  install.sh              一键恢复：按引擎链接 skill + 装插件 + 克隆 git skill（幂等）
-  preflight.sh            只读体检：按引擎报告环境缺口，退出码 0=完整 1=有缺
-  build-agents-md.sh      生成 scaffold/AGENTS.md，--check 校验与源同步
-  build-codex-manifest.sh 生成 .codex-plugin/plugin.json，--check 校验与源同步
-templates/        新写 skill 的起步模板（已含 engines: 字段）
+  install.py        机器层：安装 / 体检（--check）/ 卸载（--uninstall）
+  init_project.py   项目层：安装与同步（--check 只预览）
+  common.py         两者共用：frontmatter、内容指纹、受管区块
+tests/              单测 + 仓库门禁（CI 跑）；e2e/ 是用真实 claude / codex 跑的端到端验证
+catalog/            第三方插件与 MCP 档案：本体由上游管理，这里记来源、装法、用途、坑
+mcp/registry.json   MCP 登记册（单一来源，凭据只记键名）
+install.manifest    第三方插件清单
+templates/          新写 skill 的起步模板（已含 engines: 字段）
+VERSION             版本号；main 上出现新值即自动打 tag 发 Release
 ```
 
-同一份内容、两条分发通道：**插件市场模式**（消费者视图——只读订阅、hook 自动注入、自动更新）和 **git 仓库模式**（维护者视图——符号链接可直接改、zephyr-scaffold-init 按项目注入）。选一条用即可。
+```bash
+python3 -m unittest discover -s tests          # 单测 + 仓库门禁，CI 同款
+python3 tests/e2e/run_e2e.py --engine codex    # 真实 codex：注入、读、写、隔离
+python3 tests/e2e/run_e2e.py --engine claude   # 真实 claude：红线可见、记忆写进 .memory
+```
+
+仓库门禁（`tests/test_repo.py`）会检查：每个 skill 有合法的 `engines:`、种子记忆格式合规且与索引一一对应、红线不超过 200 行、全仓不再出现已退役的文件名。
 
 ---
 
@@ -398,20 +239,52 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 |---|---|---|
 | [humanizer](skills/writing/humanizer/) | ⚙️CC 基于 Wikipedia「AI 写作特征」指南，检测并改写文本中 30 种 AI 腔模式（clone 自 [blader/humanizer](https://github.com/blader/humanizer)） | 编辑 AI 生成/疑似 AI 腔的文稿，去 AI 味、加人味时 |
 
-### general — 通用（9 个）
+### general — 通用（8 个）
 
 | Skill | 是干啥的 | 什么时候用 |
 |---|---|---|
 | [zephyr-background-watch](skills/general/zephyr-background-watch/) | ⚙️CC 让外部长任务跑完主动来找你：谁会自动叫醒你谁不会、按通知次数选形状（一次性用后台 Bash / 每次发生用 Monitor）、**静默≠正常**的中间态哨兵纪律、轮询脚本工程规范（**Claude Code 专属**，自写） | 起了外部系统上的任务、CI、部署、远程队列这类不会主动通知你的长活时 |
-| [zephyr-coding-standards](skills/general/zephyr-coding-standards/) | 编码与工程标准：不为写而写 / 融入现有代码、结构三清晰（目录/结构/模块）、设计与实现纪律（可读性、错误处理、日志、性能）、留痕文档、依赖选型四看、环境隔离与可回滚，含交付前自检清单（自写） | 写代码、改代码、做架构设计、选第三方库、配环境或准备交付时 |
-| [zephyr-quality-discipline](skills/general/zephyr-quality-discipline/) | 质量与求真纪律：测试驱动（先写测试看它失败）、机器能查的进 CI 门禁、质量不由写的人自证、对抗审查以收敛为准不设轮数；排查三纪律与「什么算验过了」的证据规格（自写） | 写测试、做代码审查、验证自己的产出、或排查一个问题时 |
 | [zephyr-secrets-hygiene](skills/general/zephyr-secrets-hygiene/) | 本机凭据治理：按「谁能读到」分层归位（第 0 层根本不存 → keychain → 600+按需加载 → 系统标准位 → 永不全局 export）、登记册要能机器对账、`withkey` 按需加载器；退役前查真正的调用方且不 rm 只隔离；含实测静默陷阱清单（`ssh-keygen -p` 非 TTY 下静默设空口令还照报成功等）。**不带脚本**：给扫描位置表、「只吐键名不吐值」的命令写法与加载器参考实现，让用户写进自己的环境（自写） | 整理/审计本机密钥、判断某 token 还能不能删、给新机器配凭据、或新增一份凭据要决定放哪时 |
 | [zephyr-nested-git](skills/general/zephyr-nested-git/) | 「外层协作仓 + 多个独立业务代码仓」的 nested-git 指针拓扑：外层零业务代码，只存指针 manifest（url/path/prod_branch）与协作产物，代码仓独立 clone 嵌在外层被 .gitignore 挡住、各推各的远端；指针是仓库级不是提交级，用版本关联精度换两层平台/凭据/CI 的彻底解耦。含单文件参考 CLI（红线在代码里：pull 只 ff-only、push 永不 force、fetch 失败不吞、prod_branch 漂移告警）+ 空壳 MR 四道校验 + 运维台通用纪律（dry-run 默认、写操作拒绝 all、凭据不进 argv）（自写） | 新项目要定多仓关联方式（submodule/subtree/合仓/nested 选哪个）、初始化或承接 nested 拓扑项目、给外层仓写跨仓 git 运维 CLI 时 |
 | [zephyr-cloud-cli-ops](skills/general/zephyr-cloud-cli-ops/) | CLI-first 云运维分工协议：控制台是人的界面、API 才是 agent 的界面——人只做付钱 / 开通 / 发密钥三类控制台专属动作，其余（建桶/传件/证书/加速域名/DNS/防盗链/预热/验证）全由 agent 用 CLI+SDK 完成。含开工四步协议（凭据归位→只读验活→摸底→动手）、COS+CDN 静态资产十步全链蓝图（每步带完成判据，附 faststart / 防盗链白名单 / 证书续期台账等配套纪律）、实测陷阱清单（边缘证书铺设窗口期、`--resolve` 指定节点是错误测法、本机 VPN 隧道废掉测速）。方法论跨云，worked example 腾讯云。**不带脚本**（自写） | 要配对象存储 / CDN / 证书 / DNS、静态资产迁上云分发、新云账号想让 agent 接管运维、或线上 CDN 慢 / 握手失败 / 测速反复要排查时 |
 | [zephyr-multica-collab](skills/general/zephyr-multica-collab/) | 让任意 coding agent 成为 Multica（AI 原生工作区）的操作台：从零 onboarding、发 issue 派活、观测轨迹、验收打回、死锁救活、团队协作范式，全程 CLI；含把 issue 建成带全属性的工作管理对象（project / 排期 / 正交标签 / stage / PR 关联）与建专职 agent 的配置边界（自写） | 提到 multica、想把任务托管给 agent 做看板化管理、或贴出 multica 实例 URL 时 |
 | [zephyr-multica-read](skills/general/zephyr-multica-read/) | Multica 持久化记忆的只读读取器：issue 网络、评论结论、agent 轨迹、成本全景，14 个只读子命令（白名单网关 fail-closed），token 高效（自写） | 冷启动 onboarding、取证溯源、按标签/时间/全文检索 workspace 记忆、跨会话增量同步时 |
 | [zephyr-workflow-orchestration](skills/general/zephyr-workflow-orchestration/) | ⚙️CC 多 agent Workflow 编排打法：何时上（杠杆闸）、选形状（barrier/pipeline/offload）、五种范式（大规模调研/判官团/对抗审查/上下文卸载/大切片流水线）、承重纪律，以及长跑可靠性工程（输出爆量=头号杀手、文件落盘量产、null 兜底、指标由代码算、缓存续跑、放量前资源三件套 gate）（自写） | 面对有份量的多步工程活（设计/大改/调研/审查/迁移/排障），要决定怎么编排多 agent 时；或长跑 workflow 卡住 / 大批失败 / 放量前评估时 |
-| [zephyr-scaffold-init](skills/general/zephyr-scaffold-init/) | 本脚手架的注入器：预检查环境按需补装，再把 GUIDE.md 与 HABITS.md 挂进当前项目的 CLAUDE.md（自写） | 启动新项目时说"安装 zephyr-scaffold-init 脚手架"，一次注入永久生效 |
+| [zephyr-scaffold-init](skills/general/zephyr-scaffold-init/) | 本脚手架的项目层安装器：体检本机按需补装，再给项目装上 `AGENTS.md` 红线区块与 `.memory/` 共享记忆，Claude 侧把自动记忆目录指向 `.memory`；重跑即同步脚手架新版（自写） | 新项目启动、或脚手架更新后同步时说"安装 zephyr-scaffold-init 脚手架" |
+
+---
+
+## 精选第三方插件（catalog/）
+
+这套脚手架的另一半价值：不只收编 skill，还替你**把第三方插件的坑踩完了**——每个都在真实项目里用过、建了档案（来源、装法、每个 skill 是干啥的），试错成本已经付过。
+
+**Claude Code**（会话内斜杠命令，或终端里用等价的 CLI 写法）：
+
+```bash
+# 终端 CLI 写法（headless / 脚本化 / agent 操作用这套）
+claude plugin marketplace add twostraws/swiftui-agent-skill
+claude plugin install swiftui-pro@swiftui-agent-skill
+```
+
+会话内则是同名的斜杠形式：`/plugin marketplace add …`、`/plugin install …`。
+
+**Codex**：
+
+```bash
+codex plugin marketplace add https://github.com/twostraws/swiftui-agent-skill
+codex plugin add swiftui-pro@swiftui-agent-skill
+```
+
+或者直接跑 `python3 scripts/install.py`，它按 `install.manifest` 给每个引擎装它装得上的那些。
+
+| 插件 | 为什么值得装 | 引擎 | 档案 |
+|---|---|---|---|
+| **swiftui-pro** | Paul Hudson（Hacking with Swift 作者）出品，按九份参考清单系统审查 SwiftUI 代码的现代 API、数据流与性能 | 两个都行 | [查看](catalog/swiftui-pro.md) |
+| ~~**ios-swift-skills**~~ | iOS 开发一包全覆盖（10 个 skill）。**⚠️ 当前装不上**，见下方说明 | 暂不可用 | [查看](catalog/ios-swift-skills.md) |
+
+> ⚠️ **`ios-swift-skills` 当前对所有新用户不可用**（v1.7.x 实测）：上游 `patrickserrano/skills` 的 `.claude-plugin/` 下只有 `plugin.json`，**没有 `marketplace.json`**，两个引擎 add 都会失败。报错文案是「Marketplace file not found at 〈本地缓存路径〉」——**指向本地路径，极易误判成自己环境坏了**，根因其实在上游仓库结构。已从 `install.manifest` 注释掉；上游补上清单后取消注释即可恢复。
+
+插件本体由各自作者维护更新，本仓库只存档案不存副本；`install.py` 按 `install.manifest` 自动安装，也可以敲上面的命令手动装。
 
 ---
 
@@ -421,8 +294,8 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 
 机制与 skill 收编同构，但收编单位不同——**MCP 收编的是「配置 + 档案」，不是内容副本**（server 本体活在 npm / 上游服务里）：
 
-- **单一来源**：手改的只有 `mcp/registry.json`（配置模板 + `env_required` 凭据键名）；install.sh 据此 `claude mcp add-json --scope user` 幂等注入（已配置的跳过、不覆盖），preflight.sh 只读对账
-- **凭据红线**：registry 只登记键名，**值永不入库**；install.sh 仅在当前环境能解析出全部键时才注入（fail-closed），缺则跳过并提示——取值方式见 zephyr-secrets-hygiene
+- **单一来源**：手改的只有 `mcp/registry.json`（配置模板 + `env_required` 凭据键名）；`scripts/install.py` 据此 `claude mcp add-json --scope user` 幂等注入（已配置的跳过、不覆盖），`install.py --check` 只读对账
+- **凭据红线**：registry 只登记键名，**值永不入库**；`install.py` 仅在当前环境能解析出全部键时才注入（fail-closed），缺则跳过并提示——取值方式见 zephyr-secrets-hygiene
 - **少而精纪律**：MCP 的 tool 定义常驻吃上下文，user 档只放高频通用的；重的 / 项目特定的以后走 project 档
 
 | MCP | 是干啥的 | 凭据 | 档案 |
@@ -439,67 +312,41 @@ templates/        新写 skill 的起步模板（已含 engines: 字段）
 一行一条，空格分隔，`#` 开头是注释：
 
 ```
-# 插件：plugin <marketplace 来源（github repo 或 URL；官方市场填 -）> <插件@市场>
-plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills
-plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill
-
-# git 来源 skill（跟踪上游更新、不收编进仓库）：clone <git 地址> <目录名>
-# clone https://github.com/someone/some-skill some-skill
+# plugin <市场来源（github repo 或 URL；引擎内建的市场填 -）> <插件@市场> [适用引擎，逗号分隔，省略=两个都装]
+plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill claude-code,codex
 ```
 
-注意：`@` 后面的**市场名**不等于 marketplace 来源的 repo 名，以该市场 `.claude-plugin/marketplace.json` 里的 `name` 字段为准；不确定就先 `claude plugin marketplace add <来源>` 一次，看输出里的市场名再照抄。
-
-`skills/` 下收编的副本**不需要**写进 manifest——install.sh 自动全部链接。
+`@` 后面的**市场名**不等于来源 repo 名，以该市场 `marketplace.json` 里的 `name` 字段为准。`skills/` 下收编的副本**不需要**写进 manifest，`install.py` 自动全部链接。
 
 ---
 
-## 维护手册
+## 从 2.x 升级
 
-| 事件 | 动作 |
-|---|---|
-| 收一个散装 skill | 副本放进 `skills/<领域>/` → README 索引加一行 → GUIDE.md 路由加一条 → plugin.json `skills` 数组加一条 → README 徽章与分组计数同步 → 跑 install.sh → 按下行发版 |
-| 装一个新插件 | `catalog/` 建档案 → `install.manifest` 加 `plugin` 行 → README 插件表加一行 →（含 skill 则 GUIDE.md 加路由）→ 跑 install.sh 完成安装 |
-| 收一个好用的 MCP | `mcp/registry.json` 加条（凭据只记键名）→ `catalog/mcp-<name>.md` 档案 → README MCP 表 + GUIDE 路由各一行 → 跑 install.sh → 按下行发版 |
-| 跟踪上游的 git skill | `install.manifest` 加 `clone` 行（install.sh 负责 clone 和后续 pull） |
-| 悟出新的经验习惯 | HABITS.md 加一行并按下行发版（git 侧即刻生效，插件订阅者更新后生效） |
-| 自己写新 skill | 从 `templates/skill-template/` 复制起步，**命名加 `zephyr-` 前缀**（自写与外部收编的命名区分线），写完按"收散装 skill"流程走 |
-| 改了 GUIDE/HABITS/skill 正文（发版） | bump `.claude-plugin/` 两个 json 里的 version → commit + push，**其余全自动**：GitHub Actions 会校验清单一致性，并对新版本自动打 `v<版本>` 与 `zephyr-skills--v<版本>` 双 tag、生成 Release。git 用户 pull 即生效；插件订阅者 `claude plugin update` 后生效 |
+3.0.0 是一次彻底重构：
 
-> 嫌手动登记麻烦？把这些动作丢给项目里的 AI 助手做——它会按[操作手册](#给-ai-助手的操作手册)执行。
+- **插件市场模式已移除，只保留 git 模式。** 订阅过插件的先卸掉（`claude plugin uninstall zephyr-skills`，Codex 侧同理），再按[快速开始](#快速开始)装
+- **GUIDE / HABITS 注入改成了红线区块 + 共享记忆。** 老项目里那两个指向脚手架的符号链接（`CLAUDE.local.md`、`AGENTS.md`）会在重跑 `init_project.py` 时自动清掉，换成新结构；`.gitignore` 里的 `AGENTS.md` 一行也会去掉，因为红线现在要提交进 git
+- **写代码标准与质量纪律两个 skill 已并入红线**，不再作为 skill 存在；`install.py` 会清掉指向它们的失效链接
+- **安装脚本换成 Python**（`install.py` / `init_project.py`），体检用 `install.py --check`
 
 ---
 
 ## Fork 指南与 FAQ
 
-**插件市场模式和 git 模式怎么选？**
-只用不改 → 插件市场（两条命令、自动更新、hook 全自动注入）；要改内容、收编自己的 skill → git 模式（符号链接直接改，改完 push 就是发布）。同一台机器**只走一条**。
-
-**不小心两种模式都装了会怎样？**
-不会坏，但全都是双份：GUIDE/HABITS 注入两遍（hook 一遍 + 项目入口文件一遍），全部 skill 也双份注册（`zephyr-skills:xxx` 与 `~/.claude/skills/xxx` 各一份），白费上下文还可能造成路由歧义。解法：卸掉一边——插件侧 `claude plugin uninstall zephyr-skills`；git 侧删掉项目根的 `CLAUDE.local.md` / `AGENTS.md` 符号链接，以及 `~/.claude/skills` 下指向本仓库的符号链接。
-
-**插件模式怎么拿到更新？**
-`claude plugin update zephyr-skills` 一条命令更新到最新（市场清单会定期自动刷新，但插件本体更新以这条命令为准）。git 模式则 `git pull` 即全局生效。
-
 **我想拿去自用，要改哪些地方？**
 
-1. 全局搜索替换四个标识符（比逐处枚举更不容易漏）：`zephyr4123`（GitHub 用户名）、`skills-Scaffolding`（仓库名）、`zephyr-skills`（插件名）、`skills-scaffolding`（市场名）——覆盖 README、`.claude-plugin/` 两个 json、`skills/general/zephyr-scaffold-init/SKILL.md`
-2. `HABITS.md` 全文换成你自己的习惯（这是"主人的偏好"，不是通用最佳实践）
-3. `GUIDE.md` 和 `skills/` 按你的库存增删
+1. 全局搜索替换 `zephyr4123`（GitHub 用户名）和 `skills-Scaffolding`（仓库名）
+2. `seed/redlines.md` 全文换成你自己的红线和习惯——这是"主人的偏好"，不是通用最佳实践
+3. `skills/` 和 `seed/memory/` 里的路由记忆按你的库存增删
 
-**为什么全程符号链接而不是复制？**
-单一来源。复制意味着每台机器每个项目一份副本，改一处漏 N 处；链接让"仓库即真相"，`git pull` 就是全局更新。
+**为什么全程符号链接而不是复制 skill？**
+单一来源。skill 是工具，`git pull` 就是全机器更新。红线和记忆则相反：它们要跟着项目走、允许按项目定制，所以是复制进项目，再靠[同步规则](#同步规则)跟上游保持一致。
 
-**为什么项目注入不用 CLAUDE.md 的 `@import`？**
-因为它对本仓库这种用法根本不生效。Claude Code 展开 `@path` 时要求路径解析出的真实位置落在项目根之内，指向仓库（永远在项目外）的 import 一律**静默丢弃**；符号链接会被跟随，但跟过去还在项目外，照样被拦。所以改成"入口文件本身是符号链接"——`CLAUDE.local.md` / `AGENTS.md` 是被直接读取的指令文件而非 include，不受这道闸限制，同时保住单一来源。详见[三条设计决策](#设计)第 2 条。
-
-**`CLAUDE.local.md` 会影响协作者吗？**
-不会，它压根不该进 git。`CLAUDE.local.md` 是 Claude Code 约定的本机私有 memory 文件，且这里是本机绝对路径的符号链接，和 `AGENTS.md` 一起 gitignore 即可。协作者要用，自己说一句"安装 zephyr-scaffold-init 脚手架"就有了。项目自己的 `CLAUDE.md` 照常提交，不受影响。
+**公司项目也装吗？`.memory/` 会进公司仓库吗？**
+会。红线和记忆跟项目走，个人项目、公司项目一视同仁；只有 `settings.local.json`（本机绝对路径）不进 git。
 
 **这个仓库本身什么许可？**
-自有内容（脚本、GUIDE/HABITS、zephyr-scaffold-init、文档）为 MIT，见根目录 [LICENSE](LICENSE)；`skills/` 下收编的第三方 skill 沿用各自目录内的 LICENSE，与根许可无关。
+自有内容（脚本、红线与种子记忆、zephyr- 前缀的 skill、文档）为 MIT，见 [LICENSE](LICENSE)；`skills/` 下收编的第三方 skill 沿用各自目录内的 LICENSE。
 
 **收编的第三方 skill 的版权？**
-能溯源的都保留了原 LICENSE 并在索引表标注出处（emilkowalski/skills、pbakaus/impeccable、jezweb/claude-skills、blader/humanizer、anthropics/skills、arjitj2）；来源不可考的社区散装收编已于 2.0.0 全部清退，现存 skill 非外部收编（有出处）即自写（标「自写」，`zephyr-` 前缀）。若你是某个 skill 的作者：愿意署名请提 issue 补出处，不希望被收录提 issue 即删。
-
-**install.sh 会覆盖我机器上已有的同名 skill 吗？**
-不会。已存在的**真实目录**一律跳过（只提示）；只有符号链接会被刷新指向仓库。
+都保留了原 LICENSE 并在索引表标注出处（emilkowalski/skills、pbakaus/impeccable、jezweb/claude-skills、blader/humanizer、anthropics/skills、arjitj2）。若你是某个 skill 的作者：愿意署名请提 issue 补出处，不希望被收录提 issue 即删。

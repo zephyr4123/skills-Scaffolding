@@ -1,7 +1,7 @@
 # playwright（MCP）
 
 - **来源**：Microsoft 官方 `@playwright/mcp` — <https://github.com/microsoft/playwright-mcp>（npm 分发，`npx` 即用）
-- **接入**：`mcp/registry.json` 登记，install.sh 注入 Claude Code user scope；stdio 型
+- **接入**：`mcp/registry.json` 登记，scripts/install.py 注入 Claude Code user scope；stdio 型
 - **一句话**：浏览器自动化全家桶——导航、点击、表单、截图、可访问性快照、执行 JS、网络请求观测，起自己的浏览器实例干活。
 - **本机配置要点**：指定 `--browser chrome` + 独立 profile（`~/.config/playwright-profile`，与日常浏览器隔离）+ 动作超时 15s
 - **凭据**：无

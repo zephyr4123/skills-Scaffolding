@@ -1,10 +1,10 @@
 {
   "_readme": [
-    "收编 MCP server 的单一来源登记册。手改的永远只有这一份，install.sh 据此幂等注入引擎配置。",
+    "收编 MCP server 的单一来源登记册。手改的永远只有这一份，scripts/install.py 据此幂等注入引擎配置。",
     "裁决（2026-08-25）：MCP 暂只做 Claude Code 侧（注入 user scope，即 ~/.claude.json 的 mcpServers）；",
     "Codex 侧暂不管——是范围裁决，不是能力结论。engines 字段先留着，将来扩 Codex 时同一份登记册直接复用。",
-    "凭据红线：env 的值永不入库。需要凭据的 server 用 env_required 声明键名，install.sh 只在当前环境",
-    "能解析出全部键时才注入（fail-closed，缺一个就跳过并提示），preflight.sh 负责对账报缺。",
+    "凭据红线：env 的值永不入库。需要凭据的 server 用 env_required 声明键名，install.py 只在当前环境",
+    "能解析出全部键时才注入（fail-closed，缺一个就跳过并提示），install.py --check 负责对账报缺。",
     "config 里的 ${HOME} 是模板占位符，注入时展开为本机家目录。",
     "每个 server 的档案（干什么的、tools 清单、坑）在 catalog/mcp-<name>.md。"
   ],

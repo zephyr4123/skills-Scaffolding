@@ -1,8 +1,7 @@
-# skills-scaffolding 安装清单 —— scripts/install.sh 会读取本文件
+# skills-scaffolding 安装清单 —— scripts/install.py 会读取本文件
 #
 # 行格式（空格分隔）：
 #   plugin <市场来源> <插件@市场> [适用引擎]
-#   clone  <git 仓库地址> <装进 skill 根的目录名>
 #
 # plugin 行的三个字段：
 #   市场来源   github 的 owner/repo 或完整 URL；该引擎**内建**该市场时填 `-`
@@ -10,7 +9,7 @@
 #   适用引擎   逗号分隔，可选值 claude-code / codex；**省略 = 两个引擎都装**
 #             声明里没有的引擎会被**明确跳过并说明原因，不计为失败**
 #
-# skills/ 目录下收编的副本不需要写在这里，install.sh 会自动全部链接
+# skills/ 目录下收编的副本不需要写在这里，install.py 会自动全部链接
 # （并按每个 skill frontmatter 的 `engines:` 字段决定链进哪个引擎的 skill 根）。
 
 plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill claude-code,codex
@@ -24,6 +23,3 @@ plugin twostraws/swiftui-agent-skill swiftui-pro@swiftui-agent-skill claude-code
 #   ⚠️ 另注：`claude plugin marketplace add` 失败时**退出码仍是 0**，脚本无法靠退出码判定。
 #   上游哪天补了 marketplace.json，取消下面这行注释即可恢复。
 # plugin patrickserrano/skills ios-swift-skills@patrickserrano-skills claude-code,codex
-
-# 示例：以 git clone 方式跟踪上游、不收编进本仓库的 skill
-# clone https://github.com/blader/humanizer humanizer

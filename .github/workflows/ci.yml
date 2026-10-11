@@ -1,0 +1,47 @@
+# CI：每次 push / PR 跑单测与仓库门禁（skill 的 engines 字段、种子记忆格式、过期引用等）。
+# CD：main 上 VERSION 出现新值时自动打 tag + 发 GitHub Release；重复 push 同版本会安全跳过。
+# 发版动作 = 本地改 VERSION + push，其余全自动。
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    name: 单测与仓库门禁
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 单测（含仓库门禁 tests/test_repo.py）
+        run: python3 -m unittest discover -s tests -v
+
+  release:
+    name: 版本变更则打 tag 发 release
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 打 tag 并创建 Release（已存在则跳过）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v$(tr -d '[:space:]' < VERSION)"
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "tag ${TAG} 已存在，本次 push 未变更版本，跳过发版"
+            exit 0
+          fi
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          gh release create "${TAG}" --title "${TAG}" --generate-notes
+          echo "已发版 ${TAG}"
